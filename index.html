@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Todo App — Research & Strategy Report</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c232d; --line:#2a323d;
+    --ink:#e6edf3; --muted:#9aa7b4; --dim:#6e7b8a;
+    --accent:#5E5CE6; --accent2:#40C8E0; --gold:#FF9F0A; --green:#32D74B;
+    --purple:#BF5AF2; --red:#ff6b6b;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased;
+  }
+  header{
+    padding:34px 22px 22px;background:
+      radial-gradient(900px 300px at 15% -20%,rgba(94,92,230,.30),transparent 60%),
+      radial-gradient(700px 260px at 90% -20%,rgba(64,200,224,.20),transparent 60%),
+      var(--panel);
+    border-bottom:1px solid var(--line);
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+  h1{margin:0 0 6px;font-size:26px;letter-spacing:-.4px}
+  .sub{color:var(--muted);font-size:14px;max-width:760px}
+  .pill{display:inline-block;font-size:11px;letter-spacing:.4px;text-transform:uppercase;
+    background:rgba(94,92,230,.16);color:#b9b7ff;border:1px solid rgba(94,92,230,.35);
+    padding:3px 9px;border-radius:999px;margin-bottom:12px}
+  nav.tabs{
+    position:sticky;top:0;z-index:20;background:rgba(14,17,22,.92);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch;
+  }
+  nav.tabs .wrap{display:flex;gap:4px;padding:8px 12px;white-space:nowrap}
+  .tab{
+    appearance:none;border:0;background:transparent;color:var(--muted);
+    padding:9px 14px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;
+    transition:.15s;flex:0 0 auto;
+  }
+  .tab:hover{color:var(--ink);background:var(--panel2)}
+  .tab.active{color:#fff;background:var(--accent)}
+  main{padding:26px 0 80px}
+  section.page{display:none;animation:fade .25s ease}
+  section.page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2{font-size:20px;margin:6px 0 4px;letter-spacing:-.3px}
+  h3{font-size:15.5px;margin:22px 0 8px;color:#dfe7ef}
+  .lead{color:var(--muted);margin:0 0 18px;max-width:820px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 17px}
+  .card h4{margin:0 0 6px;font-size:15px}
+  .card p{margin:6px 0;color:var(--muted);font-size:13.6px}
+  .stat{background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px}
+  .stat .n{font-size:24px;font-weight:800;letter-spacing:-.5px}
+  .stat .l{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .accent{color:var(--accent2)} .gold{color:var(--gold)} .grn{color:var(--green)} .pur{color:var(--purple)}
+  ul{margin:8px 0;padding-left:20px} li{margin:5px 0;color:var(--muted)}
+  li strong,p strong{color:var(--ink)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.4px}
+  tr:hover td{background:rgba(255,255,255,.02)}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .tg-todo{color:#c9d3dd;border-color:#3a434f}
+  .tg-prog{color:#ffe0a3;border-color:#6b5320;background:rgba(255,159,10,.10)}
+  .tg-wait{color:#ffc4c4;border-color:#6b2b2b;background:rgba(255,107,107,.10)}
+  .tg-done{color:#a7f0bd;border-color:#255e37;background:rgba(50,215,75,.10)}
+  .lgt{border-left:3px solid var(--accent);padding-left:14px;margin:14px 0}
+  .win{border-left:3px solid var(--green)}
+  .warn{border-left:3px solid var(--gold)}
+  .callout{background:linear-gradient(160deg,rgba(94,92,230,.14),rgba(64,200,224,.06));
+    border:1px solid rgba(94,92,230,.30);border-radius:var(--radius);padding:18px;margin:18px 0}
+  .callout h3{margin-top:0;color:#fff}
+  .kv{display:flex;gap:8px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+  .kv b{color:var(--ink)}
+  .src{font-size:11.5px;color:var(--dim);margin-top:8px}
+  .divider{height:1px;background:var(--line);margin:26px 0}
+  details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px 14px;margin:10px 0}
+  summary{cursor:pointer;padding:12px 2px;font-weight:600;font-size:14.5px}
+  summary::-webkit-details-marker{color:var(--accent)}
+  .foot{color:var(--dim);font-size:12px;text-align:center;padding:24px}
+  .badge{font-size:11px;padding:2px 7px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);color:var(--muted)}
+  .verdict-good{color:var(--green)} .verdict-bad{color:var(--red)} .verdict-mid{color:var(--gold)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <span class="pill">Todo App Project · Strategy Brief</span>
+    <h1>A Better Cross-Platform Todo App</h1>
+    <p class="sub">Full research synthesis — 16-competitor landscape, market pulse, demographics, engineering deep-dives, and the working product thesis. Compiled from 7 research passes (2026-08-06 / 07). Built for fast review.</p>
+  </div>
+</header>
+
+<nav class="tabs"><div class="wrap" id="tabbar">
+  <button class="tab active" data-t="thesis">🎯 The Bet</button>
+  <button class="tab" data-t="competitors">🏟️ Competitors</button>
+  <button class="tab" data-t="market">📈 Market Pulse</button>
+  <button class="tab" data-t="who">👥 Who For</button>
+  <button class="tab" data-t="deep">🔬 Deep Dives</button>
+  <button class="tab" data-t="pricing">💰 Pricing</button>
+  <button class="tab" data-t="gaps">🕳️ Gaps to Win</button>
+  <button class="tab" data-t="board">✅ Task Board</button>
+</div></nav>
+
+<main><div class="wrap">
+
+<!-- ================= THESIS ================= -->
+<section class="page active" id="thesis">
+  <h2>The Working Thesis</h2>
+  <p class="lead">Build against a three-legged gap that <strong>no incumbent occupies all of at once</strong>. Each of the 16 apps studied gives up at least one leg.</p>
+
+  <div class="grid g3">
+    <div class="card"><h4>1 · Capture = Retrieval</h4>
+      <p>Notes and todos are the <strong>same underlying object</strong>. Zero-config: a captured item becomes findable later via <em>passive semantic surfacing</em> — not a chat box you must remember to query. Solves the universal "capture graveyard" failure.</p></div>
+    <div class="card"><h4>2 · AI = Connective Tissue</h4>
+      <p>AI links, tags, and resurfaces; turns voice/meeting capture into a note <em>and</em> a task in one motion. It explicitly does <strong>not</strong> auto-manage your calendar or play "executive assistant" — over-automation is actively resented (see Motion). AI does the boring structuring, never decides what matters.</p></div>
+    <div class="card"><h4>3 · Flat, Transparent Pricing</h4>
+      <p><strong>$8–12/mo single tier, AI included, no credit metering.</strong> Undercuts Sunsama/Amie/Akiflow/Motion; beats free-tier TickTick/Twos on trust. Metered AI credits (Notion, ClickUp) are actively backfiring in 2026.</p></div>
+  </div>
+
+  <div class="callout">
+    <h3>The bet, in one line</h3>
+    <p>A single-price, capture-first tool where <strong>notes and todos are one object</strong>, AI <strong>passively links/tags/resurfaces</strong> without being asked, voice/meeting capture converts into both a note and a task, and the product <strong>refuses to auto-run your calendar</strong>. That combination isn't fully occupied by any of the 16 apps studied.</p>
+  </div>
+
+  <h3>Three design decisions already locked (Anshul, 2026-08-07)</h3>
+  <div class="grid g3">
+    <div class="card lgt"><h4>💰 DESI-5 · Pricing/Architecture</h4>
+      <p><strong>Let the user bring the AI.</strong> On-device model or their own API key → our marginal inference cost ≈ 0 → app stays free & trustworthy.</p>
+      <ul>
+        <li><strong>On-device AI</strong> runs always-on stuff (semantic recall, auto-linking/tagging via embeddings) — the "passive connective tissue," and a privacy moat cloud-locked incumbents can't match.</li>
+        <li><strong>BYOK</strong> for heavy generative work (summaries, chat) — user pays the provider directly.</li>
+        <li><strong>Free</strong> = manual app + on-device passive AI + BYOK. <strong>Paid (~$8-12/mo flat)</strong> = we run the cloud AI so non-technical users need no key. Selling <em>convenience</em>, not access.</li>
+      </ul></div>
+    <div class="card lgt" style="border-color:var(--gold)"><h4>🧭 DESI-6 · Phase-1 Beachhead</h4>
+      <p><strong>English-speaking ADHD / overwhelm niche</strong> (US/EU + global English) via Reddit, Product Hunt, X. India = phase 2.</p>
+      <ul>
+        <li>ADHD app market $1.15B→$3.66B (~18% CAGR, faster than ~10% general).</li>
+        <li>The one segment incumbents demonstrably fail — users fleeing Notion/Todoist to Saner.ai/Noplex.</li>
+        <li>WTP proven: professional/high-intent segments convert 5–10% vs 2.2% freemium avg.</li>
+        <li>The ADHD spec (calm, low-load, capture-first, offline-tolerant) = the same spec India needs later.</li>
+      </ul></div>
+    <div class="card lgt" style="border-color:var(--accent2)"><h4>🎯 DESI-4 · Product Thesis</h4>
+      <p>The three legs above, built AGAINST the gap. Companion research: <span class="badge">market-pulse.md</span> <span class="badge">market-intel.md</span> <span class="badge">demographics.md</span>.</p>
+      <p>Secondary wedge: "overwhelmed brain / ADHD-first" positioning is underserved — only Saner.ai + Twos, both small.</p></div>
+  </div>
+
+  <div class="divider"></div>
+  <h3>Build principles (from the engineering deep-dives)</h3>
+  <ul>
+    <li><strong>Local-first is the bigger lever than native rendering for "snappy."</strong> Things 3's instant feel comes from local edits + background sync — never blocking the UI on the network.</li>
+    <li><strong>Derived-cache-from-source-of-truth with incremental invalidation</strong> is Obsidian's real speed trick — not a fancy DB. Our objects are <em>atomic</em> (one capture/task), so re-embedding on edit is cheap by construction.</li>
+    <li><strong>Native mobile is the clearest unsolved gap</strong> — Notion's mobile is a "read-only viewer"; wrapped-WebView (Obsidian/Capacitor) fails on cold-start + sync. Budget for genuinely native mobile.</li>
+    <li><strong>Shallow, opinionated hierarchy + soft defaults</strong> ("This Evening", "Someday") reduce decision fatigue — calm by design, directly serving the ADHD beachhead.</li>
+  </ul>
+</section>
+
+<!-- ================= COMPETITORS ================= -->
+<section class="page" id="competitors">
+  <h2>Competitive Landscape — 16 Apps</h2>
+  <p class="lead">The convergence field: todo × notes × AI. Standout strength vs. the loudest complaint for each. Expand any row for detail.</p>
+
+  <table>
+    <thead><tr><th>App</th><th>Positioning</th><th>Price</th><th>Biggest complaint</th></tr></thead>
+    <tbody>
+      <tr><td><b>Notion</b></td><td>"Everything workspace," now AI agents</td><td>Plus/Business + AI add-on; Custom Agents $10/1k credits</td><td class="verdict-bad">AI credit metering "delusional"; mobile = read-only viewer</td></tr>
+      <tr><td><b>Obsidian</b></td><td>Local-first markdown "second brain"</td><td>Free core; Sync ~$8-10/mo</td><td class="verdict-mid">Steep curve; no native task layer; DIY AI stack</td></tr>
+      <tr><td><b>Reflect</b></td><td>Encrypted backlink notes + native AI</td><td>$10/mo all-in (annual)</td><td class="verdict-mid">No offline; backlink overload at scale</td></tr>
+      <tr><td><b>Mem</b></td><td>"AI-native" notes ($28.6M funded)</td><td>Subscription</td><td class="verdict-mid">Lost differentiation; crowded out post-rewrite</td></tr>
+      <tr><td><b>Amie</b></td><td>Calendar-first + todos + AI notes</td><td>$20/user/mo, no free plan</td><td class="verdict-bad">Pivoted to AI notetaking; switchers leaving</td></tr>
+      <tr><td><b>Saner.ai</b></td><td>ADHD/overwhelm unifier ("Skai")</td><td>Free / ~$8/mo</td><td class="verdict-mid">Still beta; small-team risk</td></tr>
+      <tr><td><b>Twos</b></td><td>Low-friction capture, ADHD-framed</td><td>Free / $2/mo</td><td class="verdict-mid">Limited structure past a flat list</td></tr>
+      <tr><td><b>Capacities</b></td><td>Object-based PKM; best mobile</td><td>$11.99/mo</td><td class="verdict-mid">Learning curve; limited offline</td></tr>
+      <tr><td><b>Tana</b></td><td>Supertag knowledge-graph, going agentic</td><td>Free / $10/mo</td><td class="verdict-bad">Not snappy for quick-capture; mobile lag</td></tr>
+      <tr><td><b>Sunsama</b></td><td>Daily-planning ritual layer</td><td>$20/mo (no free tier)</td><td class="verdict-bad">4× Todoist price; docked on cost</td></tr>
+      <tr><td><b>Superlist</b></td><td>Fast task manager + notes (ex-Wunderlist)</td><td>Free / Pro $7 / Super $25</td><td class="verdict-mid">Newer; less battle-tested depth</td></tr>
+      <tr><td><b>Akiflow</b></td><td>Task/calendar aggregator + "Aki"</td><td>~$19/mo annual, $34 monthly</td><td class="verdict-bad">⚠️ Billing = loudest complaint (surprise charges)</td></tr>
+      <tr><td><b>ClickUp</b></td><td>All-in-one work OS + "Brain"</td><td>$9-28/user/mo + credits</td><td class="verdict-bad">Overwhelming; per-seat AI billing resented</td></tr>
+      <tr><td><b>Motion</b></td><td>AI auto-scheduler</td><td>~$29-49/mo, tiered credits</td><td class="verdict-bad">⚠️ Pricing opacity / nickel-and-diming — sharpest cautionary tale</td></tr>
+      <tr><td><b>TickTick</b></td><td>Does-everything, cheap; light AI</td><td>~$36/yr; generous free</td><td class="verdict-good">Not an AI player yet (the control case); busy UI</td></tr>
+      <tr><td><b>Todoist</b></td><td>Benchmark NL task capture</td><td>Free / Pro ~$60/yr</td><td class="verdict-bad">Daily sync bugs; price-hike backlash</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid g2">
+    <details><summary>Where AI genuinely helps (survives "turn it off")</summary>
+      <ul>
+        <li><strong>Passive, zero-prompt semantic recall</strong> (Obsidian Smart Connections) — the one AI pattern reviewers keep.</li>
+        <li><strong>Voice-to-task / voice-to-note</strong> (Superlist, Reflect Whisper, Saner.ai) — turns talking into structured data.</li>
+        <li><strong>Auto-scheduling that actually re-slots</strong> (Motion) — irreplaceable when it works; removes a decision.</li>
+        <li><strong>Light auto-enrichment</strong> (Twos: address→map, movie→showtimes) — invisible until needed.</li>
+        <li><strong>Meeting summarization</strong> — the least controversial "saves real hours" feature across the whole category.</li>
+      </ul></details>
+    <details><summary>Where AI is lipstick (turned off)</summary>
+      <ul>
+        <li><strong>Generic in-app chat</strong> bolted onto a workspace (Notion AI = "wrapper around GPT/Claude that only sees your data").</li>
+        <li><strong>"AI Employee" overpromise</strong> (Akiflow's Aki) — marketing-vs-reality gap is the top disappointment.</li>
+        <li><strong>Auto-reschedule-your-life as default</strong> — Sunsama's refusal to do it is praised as a feature.</li>
+        <li><strong>Per-seat/per-credit AI billing</strong> on already-paid tools — a trust problem that kills adoption.</li>
+      </ul></details>
+  </div>
+  <div class="callout win" style="background:linear-gradient(160deg,rgba(50,215,75,.12),transparent);border-color:rgba(50,215,75,.3)">
+    <p style="margin:0"><strong>Pattern:</strong> AI wins when it removes a step the user already did manually (transcribe, tag, link, enrich). It loses when presented as replacing a <em>judgment call</em> (reschedule my day, decide what matters) — or when its billing creates more anxiety than the time it saves.</p>
+  </div>
+</section>
+
+<!-- ================= MARKET ================= -->
+<section class="page" id="market">
+  <h2>Market Pulse &amp; Demand Signals</h2>
+  <p class="lead">Where the market is actually pulling — 2025–2026. Growing fast, but bifurcating rather than heading to one winner.</p>
+
+  <div class="grid g4">
+    <div class="stat"><div class="n accent">$13.15B→$30.85B</div><div class="l">Productivity apps market, 2025→2034 (9.94% CAGR)</div></div>
+    <div class="stat"><div class="n gold">$1.65B→$6.15B</div><div class="l">Personal-knowledge-base AI, 2025→2030 (~30% CAGR)</div></div>
+    <div class="stat"><div class="n pur">$1.15B→$3.66B</div><div class="l">ADHD/neurodivergent app market, 2025→2032 (~18% CAGR)</div></div>
+    <div class="stat"><div class="n grn">2.8B+</div><div class="l">Mobile productivity-app users; 70%+ mobile-first</div></div>
+  </div>
+
+  <h3>The seven signals that matter</h3>
+  <div class="grid g2">
+    <div class="card"><h4>Category is bifurcating, not consolidating</h4><p>Splitting into "AI-native personal RAG" vs. "old-school lightweight" — no winner-take-all shape.</p></div>
+    <div class="card"><h4>"AI feature fatigue" is the dominant narrative</h4><p>Users ask "is this actually helping?" not "which AI next?" 2026 rule of thumb: <strong>use AI for boring work, not decisions.</strong></p></div>
+    <div class="card"><h4>"Consolidation fatigue" is the loudest complaint</h4><p>Tired of switching across 5-7 tools per project. The market wants consolidation that <em>reduces cognitive load</em> — not ClickUp, which consolidates features but not load.</p></div>
+    <div class="card"><h4>Capture-vs-retrieval is the structural failure</h4><p>"Every app is built for capturing, almost none for finding." The "capture graveyard" recurs across Evernote, Notion, Obsidian post-mortems.</p></div>
+    <div class="card"><h4>Subscription fatigue is quantified, not grumbling</h4><p>5-year cost deltas openly compared ($447 one-time vs $6,490 over 5 years). Metered/credit AI add-ons resisted — exactly where Notion/ClickUp/Motion moved.</p></div>
+    <div class="card"><h4>Billing trust &gt; price</h4><p>Akiflow &amp; Motion's loudest complaints are <em>surprise charges</em>, not sticker price. Pushing users toward simplest flat pricing (TickTick, Reflect, Twos).</p></div>
+    <div class="card"><h4>ADHD/overwhelm is a fast-growing wedge</h4><p>Saner.ai &amp; Twos both cite it as their sharpest differentiator + highest-conviction base. "Designed for an overwhelmed brain" is a viable GTM.</p></div>
+    <div class="card"><h4>Reddit/PH threads recommend <em>stacks</em>, not single tools</h4><p>"Beyond Time + Reclaim + Grammarly" — implicitly conceding no single app nailed capture+task+AI at once. That's a gap, not a settled market.</p></div>
+  </div>
+  <p class="src">Sources: researchandmarkets (PKM AI), Fortune Business Insights, Grand View Research, digitalbiztalk, influencers-time — verified via web search 2026-08-07.</p>
+
+  <div class="divider"></div>
+  <h3>What competitors shipped (last ~3 months)</h3>
+  <table>
+    <thead><tr><th>Company</th><th>Shipped / planned</th><th>Signal for us</th></tr></thead>
+    <tbody>
+      <tr><td><b>Todoist</b></td><td>Ramble — voice→structured tasks (Gemini, 38 langs), on all plans; Project Insights moved Business→Pro</td><td>Voice capture is now table stakes &amp; free-tier; analytics descending down the ladder — include basic insights in Pro-equiv.</td></tr>
+      <tr><td><b>Notion</b></td><td>Custom/External Agents (Claude, Cursor on boards); mobile still "read-only viewer"</td><td>Moving to team/dev AI hub, away from personal capture. Mobile weakness = open lane for native snappiness.</td></tr>
+      <tr><td><b>Evernote</b></td><td>v11 — AI Assistant, Semantic Search, Meeting Notes on <em>every</em> tier incl. Free</td><td>AI≠paid-only assumption breaks — but it's <em>managed</em> AI, not BYOK. Consistent with our split.</td></tr>
+      <tr><td><b>TickTick</b></td><td>MCP support (ChatGPT/Claude manage tasks); AI Mode voice auto-split</td><td>NL/voice auto-structuring is default expectation category-wide. Apps exposing themselves <em>to</em> AI = a distribution channel.</td></tr>
+      <tr><td><b>Apple</b></td><td>Auto-Categorize, Siri Suggestions pull tasks from Mail/Messages</td><td>Ambient/passive capture — closed Reminders' "biggest weakness"; some Things 3 users reconsidering.</td></tr>
+      <tr><td><b>Obsidian</b></td><td>"Save content without opening the app"; no native AI (plugin ecosystem, mostly BYOK)</td><td>Deliberately not building AI in-house — validates BYOK-free/managed-paid at the plugin layer.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ================= WHO ================= -->
+<section class="page" id="who">
+  <h2>Who It's For — Demographics &amp; Beachhead</h2>
+  <p class="lead">Recommended beachhead: <strong>ADHD/overwhelm-friendly productivity</strong>, English high-WTP first, India phase 2. Fast growth + explicit incumbent neglect = the classic beachhead signal.</p>
+
+  <h3>The five personas</h3>
+  <div class="grid g2">
+    <div class="card"><h4>A · Overwhelmed Knowledge Worker <span class="badge">largest · saturated</span></h4>
+      <p>60% of time goes to "work about work"; 275 interruptions/day. Highest WTP (5-10% convert, often employer-expensed). <strong>But every incumbent targets it</strong> — hardest beachhead despite biggest pool.</p></div>
+    <div class="card"><h4>D · ADHD / Neurodivergent <span class="badge" style="color:var(--green);border-color:#255e37">★ recommended</span></h4>
+      <p>$1.15B→$3.66B market; ~37M adult users. Standard todo UX <em>actively fails</em> them. WTP demonstrated (they pay for therapeutic-adjacent value). ~29% face connectivity limits → offline-first is a requirement. <strong>The most explicitly "underserved" segment across all research.</strong></p></div>
+    <div class="card"><h4>C · Solo Founder / Solopreneur <span class="badge">growing</span></h4>
+      <p>23.7%→36.3% of startups (2019→2025). 54% burnout, 75% anxiety — the #1 failure predictor. Will pay for anything that credibly replaces headcount. Underserved wedge: calm/low-friction, not another dashboard.</p></div>
+    <div class="card"><h4>B · Student <span class="badge">low WTP</span></h4>
+      <p>Classic "free forever" cohort; monetizes later as they graduate. Strategic funnel value, not direct revenue. <strong>Avoid as v1.</strong></p></div>
+  </div>
+  <div class="card warn lgt" style="margin-top:14px"><h4>E · Team Lead / Manager</h4><p>Requires multiplayer from day one — heavier build. Lower priority as a beachhead.</p></div>
+
+  <div class="divider"></div>
+  <h3>Willingness to pay</h3>
+  <div class="grid g4">
+    <div class="stat"><div class="n">2.2%</div><div class="l">Freemium median download→paid</div></div>
+    <div class="stat"><div class="n grn">5–10%</div><div class="l">Professional productivity apps</div></div>
+    <div class="stat"><div class="n gold">12.1%</div><div class="l">Hard paywall conversion</div></div>
+    <div class="stat"><div class="n accent">5.2×</div><div class="l">Revenue/install: high-tier vs low-tier plans</div></div>
+  </div>
+  <p class="lead" style="margin-top:14px">Implication: <strong>don't under-price to chase volume</strong> — the users worth keeping self-select into higher tiers.</p>
+
+  <div class="divider"></div>
+  <h3>India specifics (phase 2)</h3>
+  <ul>
+    <li><strong>783M smartphone users</strong>, overwhelmingly mobile-first — Android/Play Store is the default channel. Excellent Android before anything else.</li>
+    <li><strong>Brutal price sensitivity:</strong> ceiling ~₹99–199/mo (~$1.20–2.40); Netflix India-optimal ~₹300. Won't sustain a paid tier at launch → BYOK/local-first free model (DESI-5) fits perfectly.</li>
+    <li><strong>UPI Autopay</strong> for frictionless billing, but never pass a transaction fee — 75% would quit a platform that imposed one.</li>
+    <li>Phones default to English; regional-language is a longer-term bet, not v1.</li>
+  </ul>
+  <div class="callout"><p style="margin:0"><strong>The elegance:</strong> the ADHD spec (calm, low-load, capture-first, offline-tolerant) <em>is</em> the India spec (mobile-first, connectivity-constrained, price-sensitive). Build once → monetize West in phase 1 → expand India in phase 2. Overwhelm/burnout is the shared hook that generalizes the wedge into the $13B knowledge-worker + solo-founder markets — a wedge, not a dead-end.</p></div>
+</section>
+
+<!-- ================= DEEP DIVES ================= -->
+<section class="page" id="deep">
+  <h2>Engineering &amp; UX Deep-Dives</h2>
+  <p class="lead">Four studies pressure-testing the thesis: how the best apps actually stay fast, and where each one leaves a gap.</p>
+
+  <details open><summary>🟣 Obsidian — the speed trick &amp; the local-AI proof</summary>
+    <p><strong>Files are the database.</strong> Each note = a plain <code>.md</code> file; metadata in YAML frontmatter. No SQLite, no relational DB.</p>
+    <ul>
+      <li><strong>The speed secret = the Metadata Cache:</strong> parse each file <em>once</em> into a structured record; query the cache, never re-parse raw markdown. <strong>Parse-once/query-many + incremental invalidation + event-driven</strong> (not polling). Persisted in IndexedDB, re-derived from disk if lost.</li>
+      <li>Deliberately <strong>not block-based</strong> (unlike Roam/Logseq) — the unit is the file, keeping the invalidation graph small. ~100× faster load than block-based rivals.</li>
+      <li><strong>Smart Connections</strong> = the closest existing proof of DESI-5: zero-config <em>local</em> embeddings (transformers.js, ~25MB BGE model, no API key, fully offline). JSON + brute-force cosine similarity — nobody reaches for a vector DB at vault scale.</li>
+      <li><strong>Its weakness we beat:</strong> it re-embeds the <em>whole file</em> on any edit. Our objects are atomic (one capture/task) → re-embedding is cheap by construction. Positioning: "instant recall because your notes are already atomic."</li>
+      <li><strong>Where the paywall sits:</strong> Smart Connections gates <em>passive surfacing-while-you-write</em> at $60/yr, not raw search. Tells us exactly where premium value lives: ranking/relevance/timing, not access.</li>
+      <li><strong>Mobile is its clearest unsolved problem</strong> — same web codebase wrapped in Capacitor/WebView → 60s+ cold starts on large vaults, sync fragility, ~30% of plugins don't work on mobile. If native snappiness matters, wrapped-WebView is a known-risk path.</li>
+    </ul>
+  </details>
+
+  <details><summary>🔵 Things 3 &amp; Sublime Text — snappiness &amp; calm UX</summary>
+    <p><strong>Things 3:</strong> its "instant" feel is <em>local-first + background sync</em>, not exotic rendering — the app never blocks the UI on a network round-trip.</p>
+    <ul>
+      <li><strong>Calm by removing choices:</strong> shallow opinionated hierarchy (vs OmniFocus's infinite nesting), NL date parsing, soft buckets ("This Evening", "Someday"). The "Someday" list is a <em>psychological</em> feature — defer without guilt.</li>
+      <li><strong>Avoid:</strong> Apple-only lock-in and opaque sync — conflicts with our cross-platform bet.</li>
+    </ul>
+    <p><strong>Sublime Text:</strong> purpose-built primitives on the hottest path — custom UI toolkit (Skyline), custom regex engine (sregex, tests many regexes at once), LevelDB symbol index, GPU rendering.</p>
+    <ul>
+      <li><strong>Steal:</strong> "do the work once, ahead of time, reuse it" — precompute/persist a bespoke local index for our capture/retrieval hot path.</li>
+      <li><strong>Avoid:</strong> over-building custom toolkits early — Sublime could afford years of it via a patient, profitable, non-VC model. Default to native toolkits; go bespoke only where profiling proves it's the differentiator.</li>
+      <li><strong>"No abstraction tax":</strong> every framework layer in the critical path (web view, generic ORM, network round-trip) leaks perceived latency.</li>
+    </ul>
+  </details>
+
+  <details><summary>⚪ Apple (Reminders+Notes) vs Google (Keep+Tasks) — the capture bar</summary>
+    <ul>
+      <li><strong>Apple = fastest capture:</strong> Action Button / Siri / Lock-Screen Quick Note → item created in &lt;2s, no app switch; widget-level completion; true offline-first. <strong>But:</strong> zero cross-platform, and Reminders ≠ Notes (two separate objects — exactly the fragmentation we bet against).</li>
+      <li><strong>Google = real cross-platform</strong> (Android/iOS/web) but degraded on iOS (no widget). Keep = capture, Tasks = structured — split across two apps.</li>
+      <li><strong>Google validates DESI-4 directly:</strong> mid-migration (2025→2026) folding Keep reminders <em>into</em> Tasks because the split caused user confusion — at the cost of losing location-based reminders. Even Google is paying to undo the note/task split.</li>
+      <li><strong>The open lane:</strong> nobody has "native-feeling snappiness on both iOS <em>and</em> Android." And none offer local-first/BYOK — all locked to iCloud or Google account.</li>
+    </ul>
+    <p class="src">Capture features to match: system-level single-gesture entry, widget capture+completion, voice create <em>and</em> query, share-sheet ingest, silent offline-first sync.</p>
+  </details>
+
+  <details><summary>🟦 Microsoft (To Do + OneNote) — a $2T company's broken bridge</summary>
+    <ul>
+      <li><strong>To Do:</strong> good "My Day" ritual + Outlook capture, but no project structure, chronically slow web app (years unfixed → org-priority issue), and <strong>no AI investment</strong> (that goes to OneNote/Copilot).</li>
+      <li><strong>OneNote (2026):</strong> betting big on AI <em>inside</em> the note surface — Copilot Notebooks, multimodal capture → structured "Copilot Page." Validates "capture → structured actionable output" as the market direction.</li>
+      <li><strong>The live gap:</strong> the OneNote↔To Do task-sync bridge is <em>currently broken</em> post-New-Outlook, with unresolved complaints. If a $2T company can't wire note→task continuity across its own two apps, that's strong signal the unified model is both valuable and hard enough to be a moat.</li>
+    </ul>
+  </details>
+
+  <details><summary>📣 Community sentiment — "I wish an app would just…"</summary>
+    <ul>
+      <li><strong>"…capture in under 5 seconds without deciding where it goes."</strong> The single most-repeated requirement. "If saving a note takes more than five seconds, you won't do it consistently."</li>
+      <li><strong>"…turn my note into a task without re-typing it."</strong> The current frontier; nobody's delivered it well.</li>
+      <li><strong>"…not make me manage a system on top of managing my life."</strong> ADHD-specific: more choice is the problem, not the cure → our AI must <em>reduce</em> visible complexity, not add knobs.</li>
+      <li><strong>"…work as well on mobile as desktop."</strong> Recurs for Notion/Evernote/OneNote — architectural debt they can't easily retrofit.</li>
+      <li><strong>"…not lock AI behind a sub when I already pay for the AI myself."</strong> BYOK moving niche→expected.</li>
+      <li><strong>"…stop breaking sync between its own apps."</strong> Trust in sync is fragile even among giants.</li>
+    </ul>
+  </details>
+</section>
+
+<!-- ================= PRICING ================= -->
+<section class="page" id="pricing">
+  <h2>Pricing — What's Working in 2026</h2>
+  <p class="lead">A rare case where doing the <em>less</em> sophisticated pricing thing is the more credible market move. Flat/transparent beats every metered/credit model on trust right now.</p>
+
+  <table>
+    <thead><tr><th>Model</th><th>Examples</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td><b>Flat single-tier, AI included</b></td><td>Reflect ($10/mo), TickTick (~$3-4/mo)</td><td class="verdict-good">✅ Working — lowest complaint volume, praised for trust</td></tr>
+      <tr><td><b>Generous free + cheap paid tier</b></td><td>TickTick, Superlist (free unlimited)</td><td class="verdict-good">✅ Working — drives adoption, low switching friction</td></tr>
+      <tr><td><b>Freemium + cheap AI-inclusive paid</b></td><td>Saner.ai (~$8/mo), Twos ($2/mo)</td><td class="verdict-good">✅ Working — price a non-issue for ADHD/overwhelm wedge</td></tr>
+      <tr><td><b>Mid-tier PKM ($10-15/mo)</b></td><td>Capacities ($11.99), Tana ($10)</td><td class="verdict-mid">◐ Acceptable — priced to perceived structural value</td></tr>
+      <tr><td><b>Metered AI credits on a base sub</b></td><td>Notion Custom Agents, ClickUp Brain</td><td class="verdict-bad">✗ Actively backfiring — the #1 cited complaint. Anti-pattern.</td></tr>
+      <tr><td><b>High flat, no free tier ($20-50/mo)</b></td><td>Sunsama, Amie, Akiflow, Motion</td><td class="verdict-bad">✗ Fragile — "is this worth it" + billing-trust damage (Motion/Akiflow)</td></tr>
+      <tr><td><b>Per-seat team pricing regardless of use</b></td><td>ClickUp</td><td class="verdict-mid">◐ Works for enterprise, resented by individuals</td></tr>
+      <tr><td><b>One-time purchase</b></td><td>Things 3 (~$50-80); largely absent from AI field</td><td class="verdict-mid">◐ White space — one-time share growing 6.4%→10.3% on sub-fatigue</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <h3>The read for our entrant</h3>
+    <p><strong>$8–12/mo single tier, AI genuinely included, no credits</strong> — undercuts Sunsama/Amie/Akiflow/Motion while a credible step up from free-tier TickTick/Twos. Combined with DESI-5: <strong>free tier</strong> (manual app + on-device passive AI + BYOK) monetizes power users' evangelism; <strong>managed paid tier</strong> sells convenience (no key, no beefy device) to mainstream users. Selling convenience, not access.</p>
+  </div>
+
+  <p class="lead">Reference anchors: Todoist Pro $60/yr · TickTick ~$36/yr · Notion India ₹670/mo (~$8) · India consumer ceiling ~₹99-199/mo.</p>
+</section>
+
+<!-- ================= GAPS ================= -->
+<section class="page" id="gaps">
+  <h2>The Gaps We Can Win On</h2>
+  <p class="lead">Four converging signals point at the same opening. Each is validated by a competitor's <em>specific, current</em> failure — not speculation.</p>
+
+  <div class="grid g2">
+    <div class="card win lgt"><h4>1 · Note→task continuity, claimed cleanly by nobody</h4>
+      <p>Microsoft has two apps + a <strong>currently-broken bridge</strong>. Google is mid-migration undoing its own Keep/Tasks split. Notion pivoting to team AI-agent orchestration, away from personal capture. Evernote/OneNote bolted AI onto notes but never fused note+task into one object. <strong>DESI-4 is the differentiator, not a "me too."</strong></p></div>
+    <div class="card win lgt"><h4>2 · Mobile-native speed, unaddressed at scale</h4>
+      <p>Notion's mobile = explicit "read-only viewer" in 2026; OneNote lags on large files; web-wrapper architectures make this hard to fix without a rewrite. A truly native, fast mobile capture experience is a wedge that <strong>isn't closing on its own</strong> — it's architectural debt competitors are stuck with.</p></div>
+    <div class="card win lgt"><h4>3 · BYOK-free / managed-paid, validated but unowned</h4>
+      <p>Evernote = managed-only (no BYOK). Obsidian proves BYOK works &amp; is loved — but plugin-fragmented, not native. Nobody offers <strong>"BYOK unlocks it free, or pay us to manage it"</strong> as one clean, native, first-party toggle. Real gap for privacy/cost-conscious users cobbling together Obsidian + a paid plugin today.</p></div>
+    <div class="card win lgt"><h4>4 · Pricing trust as a feature</h4>
+      <p>Motion &amp; Akiflow bleeding users over billing opacity even where the product works. A single flat price with AI <em>included</em> (not metered) is a genuine differentiator against the entire Notion/ClickUp/Motion credit-billing direction. <strong>Doing the less-sophisticated pricing thing is the more credible move.</strong></p></div>
+  </div>
+
+  <div class="divider"></div>
+  <h3>Runner-up wedge worth tracking</h3>
+  <div class="card warn lgt"><p>The ADHD/overwhelm angle (DESI-6): most competitors are <em>adding</em> configurability and surface area, which ADHD sentiment explicitly calls the wrong direction. <strong>A product that gets <em>simpler</em> as it gets smarter</strong> — rather than adding settings — is differentiated against the entire market's current trajectory.</p></div>
+
+  <div class="callout">
+    <h3>The synthesized bet</h3>
+    <p>Single flat price (no credit metering) · capture-first where note = todo (one object) · AI passively links/tags/resurfaces without being asked · voice/meeting capture → both a note and a task in one motion · explicitly refuses to auto-manage your calendar. Built native-first for mobile snappiness, local-first + BYOK free / managed paid. Beachhead: English ADHD/overwhelm → generalize to knowledge-workers &amp; solo-founders → India phase 2.</p>
+  </div>
+</section>
+
+<!-- ================= BOARD ================= -->
+<section class="page" id="board">
+  <h2>Task Board — Todo App Workspace</h2>
+  <p class="lead">17 open · 3 done. Note: the 6 <em>Research</em> tasks read "todo" but the deep-dive docs are actually <strong>written</strong> (see Deep Dives tab) — they just need closing out. Statuses below are as recorded in Cadence.</p>
+
+  <h3>🧱 Design &amp; Architecture <span class="badge">6 open</span></h3>
+  <table><tbody>
+    <tr><td style="width:70px"><span class="tag tg-todo">todo</span></td><td><b>🎯 Working thesis</b> — capture-first, unified note=todo, AI as connective tissue, flat pricing <span class="badge">DESI-4 · P3</span></td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>💰 Pricing/architecture</b> — local-first + BYOK free, managed AI paid <span class="badge">DESI-5 · P3</span></td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>🧭 Phase-1 beachhead</b> — English ADHD/overwhelm niche; India = phase 2 <span class="badge">DESI-6 · P3</span></td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Cross-platform</b> — native iOS, Android + desktop; research the right stack <span class="badge">DESI-1</span></td></tr>
+    <tr><td><span class="tag tg-prog">in progress</span></td><td><b>Common interface / shared blueprint</b> — data model &amp; contracts stay same across platforms <span class="badge">DESI-2</span></td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Design toolkit</b> — swappable themes &amp; layouts (theming as config) <span class="badge">DESI-3</span></td></tr>
+  </tbody></table>
+
+  <h3>🔍 Research <span class="badge">6 open · docs written</span></h3>
+  <table><tbody>
+    <tr><td style="width:70px"><span class="tag tg-todo">todo</span></td><td><b>Things 3</b> — UX &amp; feature set, architecture write-ups ✍️ <em>done → research-things-sublime.md</em></td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Obsidian</b> — .md model, why no lag despite heavy file IO ✍️ <em>done → research-obsidian.md</em></td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Sublime Text</b> — what makes it snappy ✍️ <em>done → research-things-sublime.md</em></td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Apple Reminders + Notes</b> — key features ✍️ <em>done → research-apple-android.md</em></td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Android notes/tasks</b> — Google Keep / Tasks ✍️ <em>done → research-apple-android.md</em></td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Microsoft</b> — To Do / OneNote ✍️ <em>done → research-microsoft-roadmaps.md</em></td></tr>
+  </tbody></table>
+
+  <h3>📡 Market Intel <span class="badge">3 open · ongoing</span></h3>
+  <table><tbody>
+    <tr><td style="width:70px"><span class="tag tg-todo">todo</span></td><td><b>Track big players' roadmaps</b> — Evernote, Todoist, Notion, TickTick, Apple, MS, Obsidian</td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Reddit + blog sentiment sweep</b> — what users love/hate/beg for</td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Signal:</b> Notion mobile = "read-only viewer" — validates native/snappy thesis <span class="badge">P1</span></td></tr>
+  </tbody></table>
+
+  <h3>🧩 Shlokam Reader <span class="badge">2 open · 3 done</span></h3>
+  <table><tbody>
+    <tr><td style="width:70px"><span class="tag tg-wait">blocked</span></td><td><b>Load extension in Chrome</b> (manual) — needs Anshul: Developer mode → Load unpacked ⚡</td></tr>
+    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Add keyboard shortcut</b> — <em>note: marked removed / not required</em></td></tr>
+    <tr><td><span class="tag tg-done">done</span></td><td>Auto-start Flask server on boot (launchd plist)</td></tr>
+    <tr><td><span class="tag tg-done">done</span></td><td>Test on Medium, Confluence, and a blog</td></tr>
+    <tr><td><span class="tag tg-done">done</span></td><td>Improve Google Docs paragraph detection</td></tr>
+  </tbody></table>
+
+  <div class="callout" style="margin-top:22px">
+    <h3>Suggested cleanup</h3>
+    <ul style="margin-bottom:0">
+      <li><strong>Close the 6 Research tasks</strong> — the deliverable docs exist; they're just not marked done.</li>
+      <li><strong>Delete "Add keyboard shortcut"</strong> — its own note says removed / not required.</li>
+      <li><strong>The one real blocker on you:</strong> loading the Shlokam Reader extension in Chrome (2-min manual step).</li>
+      <li>Everything else is active strategy/build work — not stuck, just sequenced.</li>
+    </ul>
+  </div>
+</section>
+
+</div></main>
+
+<div class="foot">Todo App — Research &amp; Strategy Report · synthesized from 7 research passes (2026-08-06/07) · sources inline &amp; in <code>todo-app-research/</code></div>
+
+<script>
+  const bar=document.getElementById('tabbar');
+  bar.addEventListener('click',e=>{
+    const b=e.target.closest('.tab'); if(!b)return;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById(b.dataset.t).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+</script>
+</body>
+</html>
