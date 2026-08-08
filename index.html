@@ -110,6 +110,7 @@
   <button class="tab" data-t="deep">🔬 Deep Dives</button>
   <button class="tab" data-t="pricing">💰 Pricing</button>
   <button class="tab" data-t="gaps">🕳️ Gaps to Win</button>
+  <button class="tab" data-t="arch">🏗️ Architecture</button>
   <button class="tab" data-t="backlog">✨ Feature Backlog</button>
   <button class="tab" data-t="board">✅ Task Board</button>
 </div></nav>
@@ -456,9 +457,109 @@
   </tbody></table>
 
   <div class="callout" style="margin-top:22px">
-    <h3>Blocked on you</h3>
-    <p style="margin:0">The <strong>Claude artifact</strong> (<code>02b08225…</code>) referenced in your notes is login-gated — I can't read it to fold its content in here. Paste its text (or make it public) and I'll merge it into this report.</p>
+    <h3>✅ Merged in</h3>
+    <p style="margin:0">The <strong>Claude artifact</strong> (<code>02b08225…</code>) — <em>"Files on disk, answers in memory"</em> — is now folded into the <a href="#" onclick="document.querySelector('[data-t=arch]').click();return false;" style="color:var(--accent2)">🏗️ Architecture</a> tab. No more Claude-artifact silo; this report is the single source. Full text also in <code>todo-app-research/artifact-files-on-disk-answers-in-memory.md</code>.</p>
   </div>
+</section>
+
+<!-- ================= ARCHITECTURE ================= -->
+<section class="page" id="arch">
+  <h2>Files on Disk, Answers in Memory</h2>
+  <p class="lead">The architecture thesis — <strong>what people keep asking for, how the incumbents are built, where the feeling of speed actually comes from, and the architecture that follows.</strong> Synthesized 2026-08-08 from the Obsidian · Smart Connections · Sublime Text · Things 3 teardowns. <em>(Merged from the Claude artifact so this report is the single source.)</em></p>
+
+  <h3>I · What people ask for — six requirements, in their own words</h3>
+  <p>Everything after this is machinery. This is the brief. A requirement that doesn't constrain a decision isn't a requirement, it's a wish.</p>
+  <div class="grid g3">
+    <div class="card"><h4>Most repeated · Capture &lt; 5s</h4>
+      <p><em>"Capture in under 5 seconds without deciding where it goes."</em> The filing is the tax, not the typing. <strong>Forces:</strong> no mandatory destination at capture; an unfiled object is a first-class valid state; nothing on that path may block — not a sync round-trip, not an index write, not a modal.</p></div>
+    <div class="card"><h4>The frontier · Note → task</h4>
+      <p><em>"Turn my note into a task without re-typing it."</em> Notes and tasks are the same object at different moments. <strong>Forces:</strong> one object type with a task facet, not two stores with an import. Promotion is a field appearing in frontmatter. Nobody has delivered this well — which is why it's worth it.</p></div>
+    <div class="card"><h4>ADHD · Don't hand me a system</h4>
+      <p><em>"Don't make me manage a system on top of managing my life."</em> More choice is the problem. <strong>Forces:</strong> AI must reduce visible complexity, not add knobs. The test for any feature: does it remove a decision, or add a setting?</p></div>
+    <div class="card"><h4>Retrofit debt · Mobile parity</h4>
+      <p><em>"Work as well on mobile as on desktop."</em> Recurs for Notion, Evernote, OneNote — architectural debt none can cheaply retrofit. <strong>Forces:</strong> shared core, native shell, mobile designed against the same core from day one. Obsidian's WebView answer fails this.</p></div>
+    <div class="card"><h4>Norm shift · BYOK expected</h4>
+      <p><em>"Don't lock AI behind a subscription when I already pay for the AI myself."</em> <strong>Forces:</strong> BYOK as a first-class path alongside a local model. If raw inference is the user's own, the paid tier has to be judgment, ranking and timing.</p></div>
+    <div class="card"><h4>Trust · Stop breaking sync</h4>
+      <p><em>"Stop breaking sync between your own apps."</em> One silent conflict costs more goodwill than a year of features earns. <strong>Forces:</strong> sync state is visible and inspectable; files on disk are the escape hatch — failure is an inconvenience in a folder, never data loss.</p></div>
+  </div>
+  <div class="callout" style="margin-top:18px"><p style="margin:0"><strong>How the brief lands:</strong> four of the six are already answered by choices made on other grounds — atomic objects, native shell over shared core, calm by subtraction, files-as-canonical. That agreement is a good sign, not a coincidence. Two are genuinely new: note-and-task as one object with two facets, and BYOK as a first-class path.</p></div>
+
+  <h3>II · How Obsidian is built — the vault is a folder, and the speed is a cache</h3>
+  <p><strong>Files are the database.</strong> The <code>.md</code> file on disk is the record — no SQLite, no server, no schema. Sync becomes file sync; export becomes nothing at all. The cost: no query engine. Everything below is machinery built to get that back.</p>
+  <p><strong>Frontmatter is an optional schema</strong> — a YAML block that gives each note a machine-readable record without leaving markdown. Optional, so the store is schemaless: a field may be absent, or hold a hand-typed <code>priority: high</code> where a number was expected. Validation is a read-time job, on every file, forever.</p>
+  <div class="callout"><p style="margin:0"><strong>Consequence for our writer:</strong> treat absent as a valid state with a default, never an error. When writing a file back, <strong>preserve unknown frontmatter keys and their order</strong> — other tools put fields there. A naive parse-and-reserialize eats them silently; that's the bug class that makes people stop trusting a tool.</p></div>
+  <p><strong>The metadata cache:</strong> each file is parsed once into a structured record held in memory; queries hit that record, raw markdown is never re-parsed at query time. Parse-once/query-many amortises cost, incremental invalidation re-parses exactly one file per edit, a filesystem watcher makes it event-driven. The cache is <strong>derived state, not source of truth</strong> — persisted to IndexedDB for cold start, but delete it and it rebuilds from disk. That is what licenses aggressive caching without risking data.</p>
+  <table><tbody>
+    <tr><td style="width:130px"><b>Metadata query</b></td><td>tags · links · frontmatter · headings — served from RAM, no disk touched. <span class="tag tg-done">instant</span></td></tr>
+    <tr><td><b>Full-text</b></td><td>"find the word membrane" — reads file contents, a separate path. <span class="tag tg-wait">slower</span> Bodies aren't cached.</td></tr>
+  </tbody></table>
+  <p>Design rule: anything you filter on frequently belongs in frontmatter, so it stays in the fast tier. Optional frontmatter costs <strong>recall, never speed</strong> — 10 drafts but only 7 tagged returns 7, fast and correct at 70% recall; the untagged are invisible, not slow.</p>
+  <p><strong>The decision that bought the speed:</strong> Roam/Logseq make the <em>block</em> the addressable unit — a 5,000-note vault becomes ~500,000 densely-linked nodes; edit one bullet, work out which of half a million records went stale. Obsidian's unit is the <em>file</em> — 5,000 nodes; edit one, invalidate one. The claimed ~100× faster load is mostly a smaller problem chosen up front.</p>
+
+  <h3>III · Where fast comes from — and neither case is a rendering trick</h3>
+  <div class="grid g2">
+    <div class="card"><h4>Sublime — native C++</h4>
+      <p>input event → edit buffer → GPU repaint. Three steps, sub-millisecond, no variance.</p></div>
+    <div class="card"><h4>Electron (Obsidian / VS Code)</h4>
+      <p>keystroke → DOM event → JS handler → style recalc → layout → paint → composite, plus GC pauses at random. Even when fast, it is <strong>variably</strong> fast — and the eye reads variance as lag.</p></div>
+  </div>
+  <p>Perceptual targets: input latency under ~10ms, no dropped frames while scrolling, instant window open because nothing boots a runtime. <strong>Why opening a folder is instant:</strong> (a) Sublime opens <em>before</em> it indexes — Goto Anything needs only a directory listing; (b) it does far less per file — symbol definitions only, vs Obsidian's full parse + link-resolution pass; (c) threads — C++ across all cores vs JS on essentially one.</p>
+  <div class="callout"><p style="margin:0"><strong>Takeaway:</strong> open instantly, index lazily, parallelise the parse, let features light up as the index fills. And the principle both Obsidian and Sublime reached independently — <strong>do the work once, ahead of time, reuse it</strong>. For us: a bespoke persisted local index for the capture-and-retrieval hot path, not a general store we query around.</p></div>
+  <p><strong>Things 3 — same feeling, none of the same machinery.</strong> It feels instant because it is local-first with background sync: writes land locally and return immediately, replication happens afterwards. It also removes choices — shallow hierarchy, natural-language dates, soft buckets. <em>"Someday" is not a list, it's permission</em> — it lets you defer without guilt, which is the actual reason people abandon task systems. Calm is a feature with a mechanism, and the mechanism is subtraction. What we don't take: Apple-only lock-in and opaque sync.</p>
+
+  <h3>IV · What we build — portable core, native shell</h3>
+  <pre style="background:#0d1117;border:1px solid var(--line,#2a2a35);border-radius:8px;padding:16px;overflow:auto;font-size:12.5px;line-height:1.5">┌─ SHELL — per platform, thin ────────────────────────┐
+│ GPU renderer · input loop · text layout             │
+│   desktop · Rust + wgpu, or GPUI                     │
+│   mobile  · native — not a WebView                   │
+└───────────────────────┬─────────────────────────────┘
+                        │ FFI, synchronous, &lt; 1 ms
+┌───────────────────────▼─────────────────────────────┐
+│ CORE — Rust, shared across every platform            │
+│   parse · index · query · embed · watch              │
+└───────────────────────┬─────────────────────────────┘
+                        │
+                 DISK — .md + frontmatter
+                 canonical, portable, git-friendly</pre>
+  <table><tbody>
+    <tr><td style="width:36px"><b>1</b></td><td><b>The index is derived, never source of truth.</b> Files on disk are canonical; the index (persisted to redb/SQLite as a cache) can be deleted and rebuilt. Keeps git and third-party sync working.</td></tr>
+    <tr><td><b>2</b></td><td><b>Atomic objects.</b> One capture = one file. Edit unit, embed unit, invalidation unit are the same thing — re-embedding is cheap by construction. No chunking, no staleness heuristics.</td></tr>
+    <tr><td><b>3</b></td><td><b>The latency budget is the architecture.</b> Keystroke-to-pixel under 10ms is a constraint. It forbids WebView, JS on the input path, blocking IO on the UI thread.</td></tr>
+    <tr><td><b>4</b></td><td><b>Embeddings flat and local.</b> A ~25MB model, a <code>Vec&lt;[f32; 384]&gt;</code>, brute-force cosine. At 100k objects, single-digit ms. No vector database, ever.</td></tr>
+    <tr><td><b>5</b></td><td><b>Sync is background, never in the loop.</b> Writes land on local disk and return; replication is off-thread and its failure is a state the UI reports, not a wait.</td></tr>
+    <tr><td><b>6</b></td><td><b>One object, two facets.</b> Note and task are the same stored object; promotion is a frontmatter field appearing (<code>due</code>, <code>status</code>), never a copy. One keystroke — because rule 2 made the object small enough to promote whole.</td></tr>
+  </tbody></table>
+  <div class="callout"><p style="margin:0"><strong>Precedent — Smart Connections</strong> proves local-first semantic recall is shipped engineering, not a research bet: transformers.js, a ~25MB BGE model, no key, offline, brute-force cosine. Its weakness — re-embedding the whole file on any edit (the fan spinning) — rule 2 makes impossible by construction. <strong>Where the paywall sits:</strong> it gives away raw search and charges $60/yr for passive surfacing. Revealed pricing: the market prices access to your own notes at zero and pays for the <strong>judgment layer</strong> — ranking, relevance, timing. Don't gate search; free is "find it when I ask", paid is "know what I need before I ask". BYOK narrows the paid surface to exactly that judgment layer.</p></div>
+  <div class="callout"><p style="margin:0"><strong>Mobile is the open flank.</strong> Obsidian mobile is the desktop web codebase in a Capacitor WebView — 60s+ cold starts, sync fragility against sandboxed filesystems, ~30% of plugins broken. Architectural, not a backlog item. The trap: wrapped-WebView on mobile inherits their worst problem while claiming to beat it. Native — or at minimum a native data + index layer under a web UI — is the price of the positioning.</p></div>
+
+  <h3>The ledger</h3>
+  <div class="grid g2">
+    <div class="card"><h4>✅ Steal</h4>
+      <table><tbody>
+        <tr><td><span class="tag tg-done">✓</span></td><td>Parse once, reuse forever — a bespoke persisted index.</td></tr>
+        <tr><td><span class="tag tg-done">✓</span></td><td>Open before you index — features light up as it fills.</td></tr>
+        <tr><td><span class="tag tg-done">✓</span></td><td>Local-first, background sync — network never between tap and result.</td></tr>
+        <tr><td><span class="tag tg-done">✓</span></td><td>Atomic objects — edit = embed = invalidation unit.</td></tr>
+        <tr><td><span class="tag tg-done">✓</span></td><td>Unfiled is valid — no destination ever required.</td></tr>
+        <tr><td><span class="tag tg-done">✓</span></td><td>One object, two facets — note becomes task by gaining a field.</td></tr>
+        <tr><td><span class="tag tg-done">✓</span></td><td>Calm by subtraction — shallow hierarchy, NL dates, guilt-free deferral.</td></tr>
+        <tr><td><span class="tag tg-done">✓</span></td><td>Flat local embeddings — brute-force cosine; no vector DB.</td></tr>
+      </tbody></table></div>
+    <div class="card"><h4>⛔ Avoid</h4>
+      <table><tbody>
+        <tr><td><span class="tag tg-wait">✗</span></td><td>Wrapped WebView on mobile — inherits Obsidian's worst problem.</td></tr>
+        <tr><td><span class="tag tg-wait">✗</span></td><td>Custom toolkits early — Sublime bought those with profitability we lack.</td></tr>
+        <tr><td><span class="tag tg-wait">✗</span></td><td>Platform lock-in — Things 3's Apple-only bet is closed to us.</td></tr>
+        <tr><td><span class="tag tg-wait">✗</span></td><td>Opaque sync — unfixable from the outside when it breaks.</td></tr>
+        <tr><td><span class="tag tg-wait">✗</span></td><td>Blocking the UI on a full index — a choice, not a requirement.</td></tr>
+        <tr><td><span class="tag tg-wait">✗</span></td><td>Gating search behind the paywall — access is priced at zero.</td></tr>
+        <tr><td><span class="tag tg-wait">✗</span></td><td>A margin on inference users already buy — BYOK is expected.</td></tr>
+        <tr><td><span class="tag tg-wait">✗</span></td><td>Knobs as an answer — for ADHD users, configurability is the problem.</td></tr>
+      </tbody></table></div>
+  </div>
+  <div class="callout" style="margin-top:18px"><p style="margin:0"><strong>The finding:</strong> the brief and the machinery agree. Speed is a modelling decision, not an optimisation achievement. Obsidian picked the unit that keeps invalidation small; Sublime deleted every generic layer from the critical path; Things 3 took the network out of the loop and removed the choices that remained. We win by running that audit one level finer (atomic objects), skipping infrastructure that doesn't pay for itself at our scale (vector DBs), charging for the layer users actually value (judgment, not access), and refusing the shortcuts that would undo the premise.</p></div>
+  <p style="font-size:12px;opacity:.6;margin-top:14px">Two risks named: <b>plugin ecosystem</b> (Obsidian's ~2,000-plugin moat — ship the top ten natively, sandbox WASM plugins that talk to the core not the UI thread) and <b>text layout</b> (bidi, ligatures, emoji, IME — use an existing engine like cosmic-text or GPUI's, don't write our own).</p>
 </section>
 
 <section class="page" id="board">
