@@ -110,6 +110,7 @@
   <button class="tab" data-t="deep">🔬 Deep Dives</button>
   <button class="tab" data-t="pricing">💰 Pricing</button>
   <button class="tab" data-t="gaps">🕳️ Gaps to Win</button>
+  <button class="tab" data-t="backlog">✨ Feature Backlog</button>
   <button class="tab" data-t="board">✅ Task Board</button>
 </div></nav>
 
@@ -409,9 +410,60 @@
 </section>
 
 <!-- ================= BOARD ================= -->
+<section class="page" id="backlog">
+  <h2>Feature Backlog — the product we're building toward</h2>
+  <p class="lead">17 ideas captured <strong>2026-08-08</strong> from Anshul's read-through of this report, now live in Cadence as <code>FEAT-1…17</code> (workspace: Todo App → Feature Backlog). Grouped by theme; ⭐ marks the guiding vision.</p>
+
+  <h3>⭐ North Star</h3>
+  <table><tbody>
+    <tr><td style="width:70px"><span class="tag tg-todo">FEAT-1</span></td><td><b>🌟 Jarvis/Tony-style project cockpit</b> — start a project and it spins up its tasks, notes &amp; todos together as one living workspace you converse with. Everything below ladders up to this.</td></tr>
+  </tbody></table>
+
+  <h3>✍️ Capture &amp; Input</h3>
+  <table><tbody>
+    <tr><td style="width:70px"><span class="tag tg-todo">FEAT-10</span></td><td><b>Capture-as-is, intent-agnostic</b> — dump anything ("review this doc", "which watch to buy", a quote with no action); type/organize it later.</td></tr>
+    <tr><td><span class="tag tg-todo">FEAT-12</span></td><td><b>Multi-task capture in one entry</b> — write several tasks as a single capture, auto-split (à la Saner.ai).</td></tr>
+    <tr><td><span class="tag tg-todo">FEAT-5</span></td><td><b>Desktop global quick-add shortcut</b> — hotkey opens add-todo view in seconds (like Mem's push-to-reminder).</td></tr>
+    <tr><td><span class="tag tg-todo">FEAT-17</span></td><td><b>UX inspiration</b> — Twos tooltip + capture→auto-organize interaction as reference material.</td></tr>
+  </tbody></table>
+
+  <h3>🧠 Context &amp; AI Organization</h3>
+  <table><tbody>
+    <tr><td style="width:70px"><span class="tag tg-todo">FEAT-2</span></td><td><b>Auto-generate task context from your notes</b> — attach relevant note context on todo creation; kills start-fatigue.</td></tr>
+    <tr><td><span class="tag tg-todo">FEAT-8</span></td><td><b>Zettelkasten + AI organization</b> — AI links/organizes captures so nothing rots unseen; you capture, AI keeps the graph and resurfaces items.</td></tr>
+    <tr><td><span class="tag tg-todo">FEAT-9</span></td><td><b>Daily morning briefing</b> — today's plan from tasks + notes + calendar capacity, to manage attention for the day.</td></tr>
+    <tr><td><span class="tag tg-todo">FEAT-11</span></td><td><b>Schedule-by-project-type</b> — learn what kind of work suits which time/energy and suggest when to schedule.</td></tr>
+  </tbody></table>
+
+  <h3>🗓️ Planning &amp; Views</h3>
+  <table><tbody>
+    <tr><td style="width:70px"><span class="tag tg-todo">FEAT-6</span></td><td><b>Calendar sync + capacity-aware Today view</b> — knows how much time is actually free, right-sizes today vs. deferred to calm the user.</td></tr>
+    <tr><td><span class="tag tg-todo">FEAT-13</span></td><td><b>Views: calendar · weekly priority · focus/Today</b> — inspired by Sunsama &amp; Ellie Planner.</td></tr>
+    <tr><td><span class="tag tg-todo">FEAT-4</span></td><td><b>Habit-tracking style todos</b> — recurring/streaks; study Reflect's approach.</td></tr>
+    <tr><td><span class="tag tg-todo">FEAT-16</span></td><td><b>"Someday" list — guilt-free deferral</b> — Things-style parking that doesn't nag.</td></tr>
+  </tbody></table>
+
+  <h3>🔌 Onboarding &amp; Interop</h3>
+  <table><tbody>
+    <tr><td style="width:70px"><span class="tag tg-todo">FEAT-3</span></td><td><b>Frictionless import from Obsidian Tasks / .md todos</b> — near-zero-effort switch = onboarding win.</td></tr>
+    <tr><td><span class="tag tg-todo">FEAT-14</span></td><td><b>Onboarding: import all notes from every source → AI organizes</b> — cold start becomes an instantly useful second brain.</td></tr>
+    <tr><td><span class="tag tg-todo">FEAT-15</span></td><td><b>Plugin ecosystem + own-your-data (Obsidian-style)</b> — architect for third-party plugins; curate the most-used ones. Raises switching cost.</td></tr>
+  </tbody></table>
+
+  <h3>🚧 Phase 2</h3>
+  <table><tbody>
+    <tr><td style="width:70px"><span class="tag tg-todo">FEAT-7</span></td><td><b>Web clipper</b> — capture pages/snippets into the app. Explicitly deferred to phase 2.</td></tr>
+  </tbody></table>
+
+  <div class="callout" style="margin-top:22px">
+    <h3>Blocked on you</h3>
+    <p style="margin:0">The <strong>Claude artifact</strong> (<code>02b08225…</code>) referenced in your notes is login-gated — I can't read it to fold its content in here. Paste its text (or make it public) and I'll merge it into this report.</p>
+  </div>
+</section>
+
 <section class="page" id="board">
   <h2>Task Board — Todo App Workspace</h2>
-  <p class="lead">17 open · 3 done. Note: the 6 <em>Research</em> tasks read "todo" but the deep-dive docs are actually <strong>written</strong> (see Deep Dives tab) — they just need closing out. Statuses below are as recorded in Cadence.</p>
+  <p class="lead"><strong>Updated 2026-08-08.</strong> The 6 Research deep-dives are now <strong>closed</strong> and the removed keyboard-shortcut task deleted. Remaining open: 6 Design &amp; Architecture · 3 Market Intel · 1 Shlokam Reader blocker · plus a fresh <a href="#" onclick="document.querySelector('[data-t=backlog]').click();return false;" style="color:var(--accent2)">17-item Feature Backlog</a>. Statuses below are as recorded in Cadence.</p>
 
   <h3>🧱 Design &amp; Architecture <span class="badge">6 open</span></h3>
   <table><tbody>
@@ -423,14 +475,14 @@
     <tr><td><span class="tag tg-todo">todo</span></td><td><b>Design toolkit</b> — swappable themes &amp; layouts (theming as config) <span class="badge">DESI-3</span></td></tr>
   </tbody></table>
 
-  <h3>🔍 Research <span class="badge">6 open · docs written</span></h3>
+  <h3>🔍 Research <span class="badge">✅ 6 done · closed 2026-08-08</span></h3>
   <table><tbody>
-    <tr><td style="width:70px"><span class="tag tg-todo">todo</span></td><td><b>Things 3</b> — UX &amp; feature set, architecture write-ups ✍️ <em>done → research-things-sublime.md</em></td></tr>
-    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Obsidian</b> — .md model, why no lag despite heavy file IO ✍️ <em>done → research-obsidian.md</em></td></tr>
-    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Sublime Text</b> — what makes it snappy ✍️ <em>done → research-things-sublime.md</em></td></tr>
-    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Apple Reminders + Notes</b> — key features ✍️ <em>done → research-apple-android.md</em></td></tr>
-    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Android notes/tasks</b> — Google Keep / Tasks ✍️ <em>done → research-apple-android.md</em></td></tr>
-    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Microsoft</b> — To Do / OneNote ✍️ <em>done → research-microsoft-roadmaps.md</em></td></tr>
+    <tr><td style="width:70px"><span class="tag tg-done">done</span></td><td><b>Things 3</b> — UX &amp; feature set, architecture write-ups → research-things-sublime.md</td></tr>
+    <tr><td><span class="tag tg-done">done</span></td><td><b>Obsidian</b> — .md model, why no lag despite heavy file IO → research-obsidian.md</td></tr>
+    <tr><td><span class="tag tg-done">done</span></td><td><b>Sublime Text</b> — what makes it snappy → research-things-sublime.md</td></tr>
+    <tr><td><span class="tag tg-done">done</span></td><td><b>Apple Reminders + Notes</b> — key features → research-apple-android.md</td></tr>
+    <tr><td><span class="tag tg-done">done</span></td><td><b>Android notes/tasks</b> — Google Keep / Tasks → research-apple-android.md</td></tr>
+    <tr><td><span class="tag tg-done">done</span></td><td><b>Microsoft</b> — To Do / OneNote → research-microsoft-roadmaps.md</td></tr>
   </tbody></table>
 
   <h3>📡 Market Intel <span class="badge">3 open · ongoing</span></h3>
@@ -440,29 +492,28 @@
     <tr><td><span class="tag tg-todo">todo</span></td><td><b>Signal:</b> Notion mobile = "read-only viewer" — validates native/snappy thesis <span class="badge">P1</span></td></tr>
   </tbody></table>
 
-  <h3>🧩 Shlokam Reader <span class="badge">2 open · 3 done</span></h3>
+  <h3>🧩 Shlokam Reader <span class="badge">1 open · 3 done</span></h3>
   <table><tbody>
     <tr><td style="width:70px"><span class="tag tg-wait">blocked</span></td><td><b>Load extension in Chrome</b> (manual) — needs Anshul: Developer mode → Load unpacked ⚡</td></tr>
-    <tr><td><span class="tag tg-todo">todo</span></td><td><b>Add keyboard shortcut</b> — <em>note: marked removed / not required</em></td></tr>
     <tr><td><span class="tag tg-done">done</span></td><td>Auto-start Flask server on boot (launchd plist)</td></tr>
     <tr><td><span class="tag tg-done">done</span></td><td>Test on Medium, Confluence, and a blog</td></tr>
     <tr><td><span class="tag tg-done">done</span></td><td>Improve Google Docs paragraph detection</td></tr>
   </tbody></table>
 
   <div class="callout" style="margin-top:22px">
-    <h3>Suggested cleanup</h3>
+    <h3>✅ Done 2026-08-08</h3>
     <ul style="margin-bottom:0">
-      <li><strong>Close the 6 Research tasks</strong> — the deliverable docs exist; they're just not marked done.</li>
-      <li><strong>Delete "Add keyboard shortcut"</strong> — its own note says removed / not required.</li>
+      <li><strong>Closed the 6 Research tasks</strong> — deliverable docs exist and are now marked done.</li>
+      <li><strong>Deleted "Add keyboard shortcut"</strong> — its own note said removed / not required.</li>
+      <li><strong>Captured 17 new feature ideas</strong> from the latest report read-through into the new Feature Backlog (see tab).</li>
       <li><strong>The one real blocker on you:</strong> loading the Shlokam Reader extension in Chrome (2-min manual step).</li>
-      <li>Everything else is active strategy/build work — not stuck, just sequenced.</li>
     </ul>
   </div>
 </section>
 
 </div></main>
 
-<div class="foot">Todo App — Research &amp; Strategy Report · synthesized from 7 research passes (2026-08-06/07) · sources inline &amp; in <code>todo-app-research/</code></div>
+<div class="foot">Todo App — Research &amp; Strategy Report · synthesized from 7 research passes (2026-08-06/07) · progress + feature backlog updated 2026-08-08 · sources inline &amp; in <code>todo-app-research/</code></div>
 
 <script>
   const bar=document.getElementById('tabbar');
