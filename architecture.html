@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vault Architecture — Obsidian teardown &amp; the native thesis</title>
+
+<style>
+ :root {
+ color-scheme: light;
+ --ground: #F2F4F3;
+ --panel: #FBFCFB;
+ --ink: #12191A;
+ --ink-soft: #48575A;
+ --ink-faint: #6E7E80;
+ --rule: #CDD8D6;
+ --teal: #1F6F6B;
+ --teal-wash: #E3EDEB;
+ --copper: #A9481B;
+ --copper-wash: #F6E7DF;
+
+ --serif: Charter, "Bitstream Charter", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+ --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+ --measure: 66ch;
+ --rail: 7.5rem;
+ }
+
+ @media (prefers-color-scheme: dark) {
+ :root {
+ color-scheme: dark;
+ --ground: #0E1413;
+ --panel: #151D1C;
+ --ink: #DEE7E4;
+ --ink-soft: #9CAEAB;
+ --ink-faint: #7B8D8A;
+ --rule: #26332F;
+ --teal: #56AFA5;
+ --teal-wash: #162624;
+ --copper: #D9834F;
+ --copper-wash: #2A1D15;
+ }
+ }
+
+ :root[data-theme="dark"] {
+ color-scheme: dark;
+ --ground: #0E1413;
+ --panel: #151D1C;
+ --ink: #DEE7E4;
+ --ink-soft: #9CAEAB;
+ --ink-faint: #7B8D8A;
+ --rule: #26332F;
+ --teal: #56AFA5;
+ --teal-wash: #162624;
+ --copper: #D9834F;
+ --copper-wash: #2A1D15;
+ }
+
+ :root[data-theme="light"] {
+ color-scheme: light;
+ --ground: #F2F4F3;
+ --panel: #FBFCFB;
+ --ink: #12191A;
+ --ink-soft: #48575A;
+ --ink-faint: #6E7E80;
+ --rule: #CDD8D6;
+ --teal: #1F6F6B;
+ --teal-wash: #E3EDEB;
+ --copper: #A9481B;
+ --copper-wash: #F6E7DF;
+ }
+
+ body {
+ background: var(--ground);
+ color: var(--ink);
+ font-family: var(--serif);
+ font-size: 17px;
+ line-height: 1.62;
+ -webkit-font-smoothing: antialiased;
+ margin: 0;
+ }
+
+ .page {
+ max-width: calc(var(--rail) + 2.5rem + var(--measure));
+ margin: 0 auto;
+ padding: 3.5rem 1.5rem 6rem;
+ }
+
+ /* ---- masthead ---- */
+
+ .masthead {
+ display: flex;
+ flex-direction: column;
+ gap: 1.1rem;
+ padding-bottom: 2.25rem;
+ border-bottom: 2px solid var(--teal);
+ }
+
+ .kicker {
+ font-family: var(--mono);
+ font-size: 0.72rem;
+ letter-spacing: 0.14em;
+ text-transform: uppercase;
+ color: var(--teal);
+ }
+
+ .masthead h1 {
+ font-size: clamp(2.1rem, 1.55rem + 2vw, 3.05rem);
+ line-height: 1.08;
+ font-weight: 600;
+ letter-spacing: -0.012em;
+ text-wrap: balance;
+ max-width: 22ch;
+ }
+
+ .standfirst {
+ font-size: 1.1rem;
+ color: var(--ink-soft);
+ max-width: 58ch;
+ text-wrap: pretty;
+ }
+
+ .meta-line {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 0.4rem 1.4rem;
+ font-family: var(--mono);
+ font-size: 0.74rem;
+ letter-spacing: 0.06em;
+ color: var(--ink-faint);
+ }
+
+ .backlink {
+ font-family: var(--mono);
+ font-size: 0.72rem;
+ letter-spacing: 0.08em;
+ text-transform: uppercase;
+ margin-bottom: 1.5rem;
+ display: inline-block;
+ }
+
+ /* ---- section scaffolding ---- */
+
+ .part {
+ display: grid;
+ grid-template-columns: var(--rail) minmax(0, var(--measure));
+ column-gap: 2.5rem;
+ padding-top: 3.25rem;
+ }
+
+ .part + .part { border-top: 1px solid var(--rule); margin-top: 3.25rem; }
+
+ .part-rail {
+ grid-column: 1;
+ display: flex;
+ flex-direction: column;
+ gap: 0.3rem;
+ font-family: var(--mono);
+ font-size: 0.72rem;
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+ color: var(--ink-faint);
+ position: sticky;
+ top: 1.5rem;
+ align-self: start;
+ }
+
+ .part-rail .num {
+ font-size: 1.6rem;
+ line-height: 1;
+ letter-spacing: 0;
+ color: var(--teal);
+ font-variant-numeric: tabular-nums;
+ }
+
+ .part-body {
+ grid-column: 2;
+ display: flex;
+ flex-direction: column;
+ gap: 1.15rem;
+ }
+
+ .part-body > h2 {
+ font-size: 1.72rem;
+ line-height: 1.2;
+ font-weight: 600;
+ letter-spacing: -0.008em;
+ text-wrap: balance;
+ }
+
+ .part-body > h3 {
+ font-size: 1.08rem;
+ font-weight: 600;
+ letter-spacing: 0.005em;
+ margin-top: 1.4rem;
+ padding-bottom: 0.35rem;
+ border-bottom: 1px solid var(--rule);
+ }
+
+ .part-body > h3:first-of-type { margin-top: 0.6rem; }
+
+ .part-body p { text-wrap: pretty; }
+
+ /* ---- inline elements ---- */
+
+ strong { font-weight: 600; }
+
+ em.term {
+ font-style: normal;
+ font-family: var(--mono);
+ font-size: 0.86em;
+ background: var(--teal-wash);
+ color: var(--teal);
+ padding: 0.08em 0.36em;
+ border-radius: 2px;
+ }
+
+ code {
+ font-family: var(--mono);
+ font-size: 0.86em;
+ color: var(--ink-soft);
+ }
+
+ ul.tight {
+ display: flex;
+ flex-direction: column;
+ gap: 0.42rem;
+ padding-left: 1.15rem;
+ }
+
+ ul.tight li { padding-left: 0.15rem; }
+ ul.tight li::marker { color: var(--teal); }
+
+ /* ---- finding: the claims that drive decisions ---- */
+
+ .finding {
+ border-left: 3px solid var(--copper);
+ background: var(--copper-wash);
+ padding: 0.95rem 1.15rem;
+ display: flex;
+ flex-direction: column;
+ gap: 0.4rem;
+ }
+
+ .finding .label {
+ font-family: var(--mono);
+ font-size: 0.68rem;
+ letter-spacing: 0.13em;
+ text-transform: uppercase;
+ color: var(--copper);
+ }
+
+ .finding p { margin: 0; }
+
+ /* ---- code / diagram blocks ---- */
+
+ .block {
+ background: var(--panel);
+ border: 1px solid var(--rule);
+ overflow-x: auto;
+ }
+
+ pre.block {
+ font-family: var(--mono);
+ font-size: 0.78rem;
+ line-height: 1.62;
+ padding: 1rem 1.15rem;
+ color: var(--ink-soft);
+ white-space: pre;
+ }
+
+ pre.block b { color: var(--teal); font-weight: 600; }
+ pre.block i { color: var(--copper); font-style: normal; }
+
+ /* ---- two-path latency comparison ---- */
+
+ .paths {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+ gap: 1px;
+ background: var(--rule);
+ border: 1px solid var(--rule);
+ }
+
+ .path {
+ background: var(--panel);
+ padding: 1rem 1.15rem;
+ display: flex;
+ flex-direction: column;
+ gap: 0.55rem;
+ }
+
+ .path h4 {
+ font-family: var(--mono);
+ font-size: 0.72rem;
+ letter-spacing: 0.11em;
+ text-transform: uppercase;
+ font-weight: 500;
+ }
+
+ .path.native h4 { color: var(--teal); }
+ .path.webview h4 { color: var(--copper); }
+
+ .path ol {
+ list-style: none;
+ font-family: var(--mono);
+ font-size: 0.76rem;
+ line-height: 1.5;
+ color: var(--ink-soft);
+ display: flex;
+ flex-direction: column;
+ gap: 0.22rem;
+ padding: 0;
+ margin: 0;
+ }
+
+ .path .verdict {
+ font-size: 0.9rem;
+ color: var(--ink);
+ padding-top: 0.5rem;
+ border-top: 1px solid var(--rule);
+ }
+
+ /* ---- tables ---- */
+
+ .table-wrap { overflow-x: auto; border: 1px solid var(--rule); }
+
+ table {
+ border-collapse: collapse;
+ width: 100%;
+ background: var(--panel);
+ font-size: 0.88rem;
+ }
+
+ thead th {
+ font-family: var(--mono);
+ font-size: 0.68rem;
+ letter-spacing: 0.11em;
+ text-transform: uppercase;
+ font-weight: 500;
+ color: var(--teal);
+ text-align: left;
+ padding: 0.6rem 0.9rem;
+ border-bottom: 1px solid var(--rule);
+ white-space: nowrap;
+ }
+
+ tbody td {
+ padding: 0.55rem 0.9rem;
+ border-bottom: 1px solid var(--rule);
+ vertical-align: top;
+ color: var(--ink-soft);
+ }
+
+ tbody tr:last-child td { border-bottom: none; }
+ tbody td:first-child { color: var(--ink); white-space: nowrap; }
+ td.mono, th.mono { font-family: var(--mono); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+
+ /* ---- rules list (part III) ---- */
+
+ .rules { display: flex; flex-direction: column; gap: 0.9rem; }
+
+ .rule-item {
+ display: grid;
+ grid-template-columns: 1.9rem minmax(0, 1fr);
+ column-gap: 0.9rem;
+ padding-bottom: 0.9rem;
+ border-bottom: 1px solid var(--rule);
+ }
+
+ .rule-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+ .rule-item .n {
+ font-family: var(--mono);
+ font-size: 0.95rem;
+ color: var(--teal);
+ font-variant-numeric: tabular-nums;
+ padding-top: 0.12rem;
+ }
+
+ .rule-item h4 { font-size: 1rem; font-weight: 600; margin-bottom: 0.2rem; }
+ .rule-item p { margin: 0; color: var(--ink-soft); font-size: 0.95rem; }
+
+ /* ---- requirements ---- */
+
+ .reqs { display: flex; flex-direction: column; }
+
+ .req {
+ display: flex;
+ flex-direction: column;
+ gap: 0.55rem;
+ padding: 1.15rem 0;
+ border-top: 1px solid var(--rule);
+ }
+
+ .req:first-child { border-top: none; padding-top: 0.4rem; }
+
+ .req .tag {
+ font-family: var(--mono);
+ font-size: 0.66rem;
+ letter-spacing: 0.13em;
+ text-transform: uppercase;
+ color: var(--teal);
+ }
+
+ .req .ask {
+ font-size: 1.14rem;
+ line-height: 1.38;
+ color: var(--ink);
+ text-wrap: pretty;
+ }
+
+ .req dl {
+ display: grid;
+ grid-template-columns: 4.6rem minmax(0, 1fr);
+ column-gap: 1.1rem;
+ row-gap: 0.4rem;
+ font-size: 0.93rem;
+ }
+
+ .req dt {
+ font-family: var(--mono);
+ font-size: 0.65rem;
+ letter-spacing: 0.12em;
+ text-transform: uppercase;
+ color: var(--ink-faint);
+ padding-top: 0.32rem;
+ }
+
+ .req dt.forces { color: var(--copper); }
+ .req dd { color: var(--ink-soft); margin: 0; }
+ .req dd b { color: var(--ink); font-weight: 600; }
+
+ @media (max-width: 34rem) {
+ .req dl { grid-template-columns: minmax(0, 1fr); row-gap: 0.15rem; }
+ .req dt { padding-top: 0.45rem; }
+ }
+
+ /* ---- steal / avoid ledger ---- */
+
+ .ledger {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+ gap: 1px;
+ background: var(--rule);
+ border: 1px solid var(--rule);
+ }
+
+ .ledger-col {
+ background: var(--panel);
+ padding: 1rem 1.15rem;
+ display: flex;
+ flex-direction: column;
+ gap: 0.6rem;
+ }
+
+ .ledger-col h4 {
+ font-family: var(--mono);
+ font-size: 0.72rem;
+ letter-spacing: 0.11em;
+ text-transform: uppercase;
+ font-weight: 500;
+ }
+
+ .ledger-col.steal h4 { color: var(--teal); }
+ .ledger-col.avoid h4 { color: var(--copper); }
+
+ .ledger-col ul {
+ list-style: none;
+ display: flex;
+ flex-direction: column;
+ gap: 0.55rem;
+ font-size: 0.93rem;
+ color: var(--ink-soft);
+ padding: 0;
+ margin: 0;
+ }
+
+ .ledger-col li { position: relative; padding-left: 1rem; }
+ .ledger-col li::before { content: "—"; position: absolute; left: 0; }
+ .ledger-col.steal li::before { color: var(--teal); }
+ .ledger-col.avoid li::before { color: var(--copper); }
+ .ledger-col li b { color: var(--ink); font-weight: 600; }
+
+ /* ---- closing ---- */
+
+ .closing {
+ margin-top: 3.5rem;
+ padding-top: 1.5rem;
+ border-top: 2px solid var(--teal);
+ font-size: 1.05rem;
+ text-wrap: pretty;
+ max-width: var(--measure);
+ margin-left: auto;
+ margin-right: auto;
+ color: var(--ink-soft);
+ }
+
+ .closing strong { color: var(--ink); }
+
+ @media (max-width: 47rem) {
+ .part { grid-template-columns: minmax(0, 1fr); row-gap: 1rem; }
+ .part-rail {
+ grid-column: 1;
+ position: static;
+ flex-direction: row;
+ align-items: baseline;
+ gap: 0.7rem;
+ }
+ .part-rail .num { font-size: 1.05rem; }
+ .page { padding-top: 2.5rem; }
+ }
+
+ @media (prefers-reduced-motion: no-preference) {
+ a { transition: color 120ms ease; }
+ }
+
+ a { color: var(--teal); }
+ a:focus-visible, [tabindex]:focus-visible {
+ outline: 2px solid var(--copper);
+ outline-offset: 2px;
+ }
+</style>
+
+</head><body>
+
+<div class="page">
+
+ <a class="backlink" href="./index.html">← Back to the Todo App report</a>
+
+ <header class="masthead">
+ <div class="kicker">Architecture teardown · internal</div>
+ <h1>Files on disk, answers in memory</h1>
+ <p class="standfirst">What people keep asking for, how the incumbents are built, where the feeling of speed actually comes from, and the architecture that follows.</p>
+ <div class="meta-line">
+ <span>8 Aug 2026</span>
+ <span>Subjects: Obsidian · Smart Connections · Sublime Text · Things 3</span>
+ </div>
+ </header>
+
+ <!-- ============ PART I — DEMAND ============ -->
+ <section class="part">
+ <div class="part-rail">
+ <span class="num">I</span>
+ <span>What people<br>ask for</span>
+ </div>
+ <div class="part-body">
+ <h2>Six requirements, in their own words</h2>
+ <p>Everything after this part is machinery. This part is the brief. Each ask is recorded verbatim, with what it actually means and what it forces on us — because a requirement that doesn't constrain a decision isn't a requirement, it's a wish.</p>
+
+ <div class="reqs">
+
+ <div class="req">
+ <span class="tag">Most repeated ask</span>
+ <p class="ask">"Capture in under 5 seconds without deciding where it goes."</p>
+ <dl>
+ <dt>Reading</dt>
+ <dd>The filing is the tax, not the typing. Five seconds is a real threshold — above it, consistency collapses and the tool stops being used at all.</dd>
+ <dt class="forces">Forces</dt>
+ <dd>No mandatory destination at capture. <b>An unfiled object is a first-class, valid state</b>, not an error to resolve later. Nothing on that path may block — not a sync round-trip, not an index write, not a modal asking which project.</dd>
+ </dl>
+ </div>
+
+ <div class="req">
+ <span class="tag">Unsolved — the frontier</span>
+ <p class="ask">"Turn my note into a task without re-typing it."</p>
+ <dl>
+ <dt>Reading</dt>
+ <dd>Notes and tasks are the same object at different moments in its life. The boundary between them is imposed by app architecture, not by how anyone thinks.</dd>
+ <dt class="forces">Forces</dt>
+ <dd>One object type with a task facet, not two stores with an import between them. <b>Promotion is a field appearing in frontmatter, not a copy operation.</b> Nobody has delivered this well, which is exactly why it's worth the effort.</dd>
+ </dl>
+ </div>
+
+ <div class="req">
+ <span class="tag">ADHD-specific</span>
+ <p class="ask">"Don't make me manage a system on top of managing my life."</p>
+ <dl>
+ <dt>Reading</dt>
+ <dd>More choice is the problem, not the cure. Every configurable surface is maintenance work handed back to someone who came here to offload it.</dd>
+ <dt class="forces">Forces</dt>
+ <dd><b>Our AI must reduce visible complexity, not add knobs.</b> The test for any feature: does it remove a decision, or add a setting? This is Things 3's calm-by-subtraction with a sharper edge — the audience most helped by the tool is the one least able to absorb its configuration.</dd>
+ </dl>
+ </div>
+
+ <div class="req">
+ <span class="tag">Retrofit debt</span>
+ <p class="ask">"Work as well on mobile as on desktop."</p>
+ <dl>
+ <dt>Reading</dt>
+ <dd>Recurs for Notion, Evernote and OneNote alike. It is architectural debt none of them can cheaply retrofit, because mobile was a port of a desktop premise.</dd>
+ <dt class="forces">Forces</dt>
+ <dd>Shared core, native shell, mobile designed against the same core from day one. <b>This is the requirement that validates the split in Part IV</b> — and the one Obsidian's WebView answer fails.</dd>
+ </dl>
+ </div>
+
+ <div class="req">
+ <span class="tag">Norm shift</span>
+ <p class="ask">"Don't lock AI behind a subscription when I already pay for the AI myself."</p>
+ <dl>
+ <dt>Reading</dt>
+ <dd>Bring-your-own-key has moved from niche to expected. Charging a margin on inference the user is already buying now reads as a toll.</dd>
+ <dt class="forces">Forces</dt>
+ <dd>BYOK as a first-class path, alongside the local model. It also <b>constrains the pricing thesis</b>: if raw inference is the user's own, the paid tier has to be judgment, ranking and timing. Which is precisely where Smart Connections' paywall already sits.</dd>
+ </dl>
+ </div>
+
+ <div class="req">
+ <span class="tag">Trust</span>
+ <p class="ask">"Stop breaking sync between your own apps."</p>
+ <dl>
+ <dt>Reading</dt>
+ <dd>Trust in sync is fragile even among giants with far more engineering than us. One silent conflict costs more goodwill than a year of features earns.</dd>
+ <dt class="forces">Forces</dt>
+ <dd>Sync state is visible and inspectable, never opaque. And <b>files on disk are the escape hatch</b> — when sync does fail, the failure is an inconvenience the user can resolve in a folder, never data loss.</dd>
+ </dl>
+ </div>
+
+ </div>
+
+ <div class="finding">
+ <span class="label">How the brief lands against the architecture</span>
+ <p>Four of the six are already answered by choices made on other grounds — atomic objects, native shell over shared core, calm by subtraction, files-as-canonical. That agreement is a good sign, not a coincidence. <strong>Two are genuinely new constraints:</strong> note-and-task as one object with two facets, and BYOK as a first-class path. Both are carried into Part IV.</p>
+ </div>
+ </div>
+ </section>
+
+ <!-- ============ PART II — OBSIDIAN ============ -->
+ <section class="part">
+ <div class="part-rail">
+ <span class="num">II</span>
+ <span>How Obsidian<br>is built</span>
+ </div>
+ <div class="part-body">
+ <h2>The vault is a folder, and the speed is a cache</h2>
+
+ <h3>Files are the database</h3>
+ <p>Most note apps store notes as rows and render them as documents. Obsidian inverts it: the <code>.md</code> file on disk <em>is</em> the record. No SQLite, no server, no relational schema. Sync becomes file sync. Export becomes nothing at all — you already have the folder.</p>
+ <p>The cost is that you have no query engine. Text isn't queryable. Everything below is the machinery built to get that back.</p>
+
+ <h3>Frontmatter: an optional schema</h3>
+ <p>A YAML block fenced by <code>---</code> at the very top of the file gives each note a small machine-readable record without leaving markdown.</p>
+
+ <pre class="block"><b>---</b>
+<b>status:</b> draft
+<b>tags:</b> [research, competitive]
+<b>due:</b> 2026-08-14
+<b>---</b>
+
+# Obsidian teardown
+
+Files are the database. The speed secret is the cache...</pre>
+
+ <p>It is <strong>optional</strong>, and that word carries weight. A note without frontmatter is perfectly valid — it opens, searches, and links fine. So the store is schemaless: a field may be absent, may be missing on half the vault, may hold a hand-typed <code>priority: high</code> where a number was expected. Validation is a read-time job, on every file, forever.</p>
+
+ <div class="finding">
+ <span class="label">Consequence for our writer</span>
+ <p>Treat <em class="term">absent</em> as a valid state with a sensible default, never an error. And when writing a file back, preserve unknown frontmatter keys and their order — other tools put fields there. A naive parse-and-reserialize eats them silently, and that is the bug class that makes people stop trusting a tool.</p>
+ </div>
+
+ <h3>The metadata cache</h3>
+ <p>Parsing markdown is expensive. If every query re-read and re-parsed 5,000 files, every interaction would take seconds. So each file is parsed <strong>once</strong> into a structured record held in memory. Queries hit that record; raw markdown is never re-parsed at query time.</p>
+ <p>Three properties hold it together: parse-once/query-many amortises the cost, incremental invalidation re-parses exactly one file per edit, and a filesystem watcher means it's event-driven rather than burning CPU on a polling loop.</p>
+
+ <div class="finding">
+ <span class="label">The property that makes it safe</span>
+ <p>The cache is <strong>derived state, not source of truth</strong>. It persists to IndexedDB for cold start, but delete it and it rebuilds from disk. That is precisely what licenses aggressive caching without risking data. Same discipline as a search index over a git repo.</p>
+ </div>
+
+ <h3>What a cached record actually holds</h3>
+ <div class="table-wrap">
+ <table>
+ <thead>
+ <tr><th class="mono">Field</th><th>Extracted from</th></tr>
+ </thead>
+ <tbody>
+ <tr><td class="mono">frontmatter</td><td>Your YAML fields — the part you define</td></tr>
+ <tr><td class="mono">links</td><td><code>[[wikilinks]]</code> with position offsets</td></tr>
+ <tr><td class="mono">embeds</td><td><code>![[transclusions]]</code></td></tr>
+ <tr><td class="mono">tags</td><td>Inline <code>#tags</code> in the body</td></tr>
+ <tr><td class="mono">headings</td><td>Text, level, position</td></tr>
+ <tr><td class="mono">sections</td><td>Block-level layout map of the document</td></tr>
+ <tr><td class="mono">listItems</td><td>Bullets, indent depth, task checkbox state</td></tr>
+ <tr><td class="mono">blocks</td><td><code>^block-id</code> anchors</td></tr>
+ </tbody>
+ </table>
+ </div>
+ <p>Vault-wide, it also keeps a file registry (path, size, mtime) and a resolved/unresolved link graph that powers backlinks. What it does <strong>not</strong> keep is note body text — positions are offsets pointing back into the file, so opening a note is still a real disk read.</p>
+
+ <h3>Two tiers, and the recall they buy</h3>
+ <div class="paths">
+ <div class="path native">
+ <h4>Metadata query</h4>
+ <ol>
+ <li>tags · links · frontmatter · headings</li>
+ <li>served from RAM</li>
+ <li>no disk touched</li>
+ </ol>
+ <p class="verdict">Instant. Scan over in-memory structs.</p>
+ </div>
+ <div class="path webview">
+ <h4>Full-text search</h4>
+ <ol>
+ <li>"find the word <i>membrane</i>"</li>
+ <li>reads file contents</li>
+ <li>separate path entirely</li>
+ </ol>
+ <p class="verdict">Noticeably slower. Bodies aren't cached.</p>
+ </div>
+ </div>
+ <p>The design rule that falls out: anything you will filter on frequently belongs in frontmatter, so it stays in the fast tier.</p>
+ <p>Optional frontmatter costs <strong>recall</strong>, never speed. If ten notes are genuinely drafts but only seven carry <code>status: draft</code>, the query returns seven — fast and correct, at 70% recall. The three untagged drafts are invisible, not slow. Recovering them means a full-text fallback, semantic search, or enforcing the field on write.</p>
+
+ <h3>Invalidation: two mechanisms</h3>
+ <ul class="tight">
+ <li><strong>While running</strong> — a filesystem watcher fires on create, modify, delete, rename. On modify, one file is re-parsed, its record swapped, and a <code>changed</code> event emitted so views and plugins refresh. Delete drops the record and flips inbound links to unresolved.</li>
+ <li><strong>On startup</strong> — each persisted record's <code>mtime</code> and size are compared against disk. Match, trust the cache. Mismatch, re-parse just that file.</li>
+ </ul>
+ <p>Edits made while the app was closed — a git pull, a sync, another editor — are caught by the mtime check, not the watcher. That is the whole reason external editing works at all.</p>
+
+ <h3>The decision that bought the speed</h3>
+ <p>Roam and Logseq make the <strong>block</strong> the addressable unit: every bullet gets an ID, can be referenced, transcluded, queried. More expressive, and a performance trap. A vault of 5,000 notes becomes roughly 500,000 nodes in a densely connected reference graph — edit one bullet and you must work out which of half a million derived records just went stale.</p>
+ <p>Obsidian's unit is the file. Five thousand nodes. Edit one, invalidate one. The claimed ~100× faster load is mostly this: not clever engineering, but a smaller problem chosen up front. The trade is real — you can't cheaply ask "which bullets mention X". Block refs got bolted on later and stayed second-class, because the architecture doesn't centre them.</p>
+ </div>
+ </section>
+
+ <!-- ============ PART III ============ -->
+ <section class="part">
+ <div class="part-rail">
+ <span class="num">III</span>
+ <span>Where fast<br>comes from</span>
+ </div>
+ <div class="part-body">
+ <h2>Two case studies, and neither one is about rendering tricks</h2>
+
+ <h3>The keystroke path</h3>
+ <p>Sublime's snappiness isn't one trick. It's the absence of a browser.</p>
+
+ <div class="paths">
+ <div class="path native">
+ <h4>Sublime — native C++</h4>
+ <ol>
+ <li>input event</li>
+ <li>edit buffer</li>
+ <li>GPU repaint</li>
+ </ol>
+ <p class="verdict">Three steps. Sub-millisecond, every frame, no variance.</p>
+ </div>
+ <div class="path webview">
+ <h4>Obsidian / VS Code — Electron</h4>
+ <ol>
+ <li>keystroke</li>
+ <li>DOM event</li>
+ <li>JS handler</li>
+ <li>style recalculation</li>
+ <li>layout</li>
+ <li>paint</li>
+ <li>composite</li>
+ </ol>
+ <p class="verdict">Plus GC pauses landing at random.</p>
+ </div>
+ </div>
+
+ <div class="finding">
+ <span class="label">What you are actually feeling</span>
+ <p>Even when the Electron path is fast, it is <strong>variably</strong> fast — and the eye reads variance as lag. The perceptual targets are input latency under ~10ms, no dropped frames while scrolling, and instant window open because nothing boots a runtime.</p>
+ </div>
+
+ <h3>And why opening a folder is instant</h3>
+ <p>Different question, three answers, and the first is the big one.</p>
+ <div class="rules">
+ <div class="rule-item">
+ <span class="n">a</span>
+ <div>
+ <h4>Sublime opens before it indexes</h4>
+ <p>The UI is usable immediately; symbol indexing runs on background threads and trickles in. What reads as "instant" is Goto Anything — which needs only a directory listing, not file contents. Milliseconds for 50,000 files.</p>
+ </div>
+ </div>
+ <div class="rule-item">
+ <span class="n">b</span>
+ <div>
+ <h4>It does far less per file</h4>
+ <p>Its index is symbol definitions only — a shallow single-pass scan keeping name and line. Obsidian does a full markdown parse per file, then a <em>second</em> pass resolving every link across the vault to build the graph.</p>
+ </div>
+ </div>
+ <div class="rule-item">
+ <span class="n">c</span>
+ <div>
+ <h4>Threads</h4>
+ <p>Sublime is C++ across all cores. Obsidian's parse is JS on essentially one thread, then writes each record to IndexedDB — structured-clone overhead on every file.</p>
+ </div>
+ </div>
+ </div>
+
+ <div class="finding">
+ <span class="label">Takeaway for us</span>
+ <p>Open instantly, index lazily, parallelise the parse, and let features light up as the index fills. <strong>Blocking on a full index before the app is usable is a choice, not a requirement.</strong></p>
+ </div>
+
+ <h3>Purpose-built primitives on the hottest path</h3>
+ <p>The deeper answer to "why is it like that" is that Sublime replaced the generic component wherever a generic component sat on the critical path.</p>
+
+ <div class="table-wrap">
+ <table>
+ <thead>
+ <tr><th>Primitive</th><th>Replaces</th><th>Bought</th></tr>
+ </thead>
+ <tbody>
+ <tr><td>Skyline</td><td>Qt / platform widget toolkit</td><td>Full control of the frame; no toolkit layout pass between input and paint</td></tr>
+ <tr><td>sregex</td><td>PCRE / std regex</td><td>Tests many patterns in one pass — syntax highlighting matches hundreds of rules per line</td></tr>
+ <tr><td>LevelDB symbol index</td><td>Re-scanning on demand</td><td>Persisted across launches, so the work survives the process</td></tr>
+ <tr><td>GPU rendering</td><td>CPU rasterisation</td><td>Scroll and repaint stay at frame rate on large files</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <div class="finding">
+ <span class="label">The principle worth stealing</span>
+ <p><strong>Do the work once, ahead of time, reuse it.</strong> That is the same shape as parse-once/query-many in Part II — Obsidian and Sublime arrived at it independently. For us it means a bespoke, persisted local index built for the capture-and-retrieval hot path, not a general store we query around.</p>
+ </div>
+
+ <div class="finding">
+ <span class="label">The part we cannot copy</span>
+ <p>Sublime afforded years of custom-toolkit work because it was patient, profitable and never took venture money. We are not. <strong>Default to native toolkits; go bespoke only where profiling proves the primitive is the differentiator.</strong> Building our own Skyline in year one would be borrowing their answer without their balance sheet.</p>
+ </div>
+
+ <h3>Things 3: the same feeling, none of the same machinery</h3>
+ <p>Worth studying precisely because it is <em>not</em> exotic rendering. Things 3 feels instant because it is local-first with background sync — the UI never blocks on a network round-trip. Writes land locally and return immediately; replication is something that happens afterwards, out of the user's way.</p>
+ <p>It also buys perceived speed by <strong>removing choices rather than accelerating them</strong>. A shallow, opinionated hierarchy instead of OmniFocus's infinite nesting. Natural-language date parsing so scheduling is one typed phrase. Soft buckets — "This Evening", "Someday" — that let you file something without deciding much.</p>
+
+ <div class="finding">
+ <span class="label">The psychological feature</span>
+ <p>"Someday" is not a list, it's permission. It lets you defer without guilt, which is the actual reason people abandon task systems. Calm is a feature with a mechanism behind it, and the mechanism is subtraction.</p>
+ </div>
+
+ <p>What we don't take: Apple-only lock-in and opaque sync. Both conflict directly with the cross-platform bet, and opaque sync is unfixable from the outside when it goes wrong.</p>
+
+ <h3>No abstraction tax</h3>
+ <div class="finding">
+ <span class="label">The principle both cases share</span>
+ <p>Every framework layer sitting in the critical path leaks perceived latency — a web view, a generic ORM, a network round-trip. Sublime removed the layers by building its own primitives; Things 3 removed the biggest one by never putting the network between a tap and a result. <strong>Different tactics, same audit: enumerate what sits between the user's action and the pixel, and delete what doesn't earn its place.</strong></p>
+ </div>
+
+ <h3>The comparison, stated fairly</h3>
+ <p>Sublime is fast at raw scanning; Obsidian is fast at answering relational questions. Sublime never needs a semantic layer because files are independent — it would be terrible at backlinks, and Obsidian is mediocre at grep. Things 3 sidesteps the question by having far less to be fast about. We are not choosing between them. We are trying to hold the parts that compose.</p>
+ </div>
+ </section>
+
+ <!-- ============ PART IV ============ -->
+ <section class="part">
+ <div class="part-rail">
+ <span class="num">IV</span>
+ <span>What we<br>build</span>
+ </div>
+ <div class="part-body">
+ <h2>Portable core, native shell</h2>
+
+ <pre class="block">┌─ <b>SHELL</b> — per platform, thin ────────────────────────┐
+│  GPU renderer · input loop · text layout            │
+│                                                     │
+│    desktop · Rust + wgpu, or GPUI                    │
+│    mobile  · native — <i>not</i> a WebView                  │
+└───────────────────────┬─────────────────────────────┘
+                        │ FFI, synchronous, &lt; 1 ms
+┌───────────────────────▼─────────────────────────────┐
+│  <b>CORE</b> — Rust, shared across every platform         │
+│    parse · index · query · embed · watch            │
+└───────────────────────┬─────────────────────────────┘
+                        │
+                 <b>DISK</b> — .md + frontmatter
+                 canonical, portable, git-friendly</pre>
+
+ <h3>Rules that follow from the split</h3>
+ <div class="rules">
+ <div class="rule-item">
+ <span class="n">1</span>
+ <div>
+ <h4>The index is derived, never source of truth</h4>
+ <p>Files on disk are canonical. The index — in-memory structs, persisted to redb or SQLite as a <em>cache</em> — can be deleted and rebuilt. This is what licenses aggressive caching, and what keeps git and third-party sync working.</p>
+ </div>
+ </div>
+ <div class="rule-item">
+ <span class="n">2</span>
+ <div>
+ <h4>Atomic objects</h4>
+ <p>One capture equals one file. Edit unit, embed unit, and invalidation unit are the same thing, so re-embedding is cheap by construction rather than by optimisation. No chunking logic, no staleness heuristics, no debounced re-index queue.</p>
+ </div>
+ </div>
+ <div class="rule-item">
+ <span class="n">3</span>
+ <div>
+ <h4>The latency budget is the architecture</h4>
+ <p>Keystroke-to-pixel under 10ms is a constraint, not a goal. It forbids WebView, JS on the input path, and blocking IO on the UI thread. Indexing, embedding, and sync run off-thread and publish results; the editor never waits.</p>
+ </div>
+ </div>
+ <div class="rule-item">
+ <span class="n">4</span>
+ <div>
+ <h4>Embeddings flat and local</h4>
+ <p>A ~25MB model, a <code>Vec&lt;[f32; 384]&gt;</code>, brute-force cosine. At 100k objects that is single-digit milliseconds. No vector database, ever.</p>
+ </div>
+ </div>
+ <div class="rule-item">
+ <span class="n">5</span>
+ <div>
+ <h4>Sync is background, never in the loop</h4>
+ <p>Writes land on local disk and return. Replication happens afterwards, off-thread, and its failure is a state the UI reports rather than a wait the user sits through. This is the Things 3 lesson, and it costs us a conflict-resolution story we have to design deliberately rather than inherit.</p>
+ </div>
+ </div>
+ <div class="rule-item">
+ <span class="n">6</span>
+ <div>
+ <h4>One object, two facets</h4>
+ <p>A note and a task are the same stored object seen at different moments. Promotion is a frontmatter field appearing — <code>due</code>, <code>status</code> — never a copy into a second store. This is what makes "turn my note into a task without re-typing it" a one-keystroke operation instead of an integration, and it only works because rule 2 already made the object small enough to promote whole.</p>
+ </div>
+ </div>
+ </div>
+
+ <h3>Precedent: Smart Connections</h3>
+ <p>The Obsidian plugin already proves local-first semantic recall is shipped engineering, not a research bet — transformers.js, a ~25MB BGE model, no API key, fully offline, JSON storage with brute-force cosine similarity. Nobody reaches for a vector DB at vault scale. Below roughly a million vectors, HNSW and hosted indexes solve a problem that doesn't exist.</p>
+
+ <div class="finding">
+ <span class="label">The weakness we beat structurally</span>
+ <p>It re-embeds the <strong>whole file</strong> on any edit — fix a typo in a 2,000-word note and the entire note is re-embedded. That's the background churn users notice as the fan spinning. Rule 2 makes it impossible for us by construction, which is also why it's hard to copy: Obsidian can't adopt atomic objects without breaking file-as-unit.</p>
+ </div>
+
+ <div class="finding">
+ <span class="label">Where the paywall sits</span>
+ <p>Smart Connections gives away raw semantic search and charges $60/yr for <strong>passive surfacing while you write</strong>. Read that as revealed pricing: the market treats access to your own notes as table stakes and won't pay for it. It pays for ranking, relevance, and timing — the judgment layer. So don't gate search. Free tier is genuinely good at "find it when I ask"; paid is "know what I need before I ask". That also happens to be the part that's hard to clone.</p>
+ </div>
+
+ <div class="finding">
+ <span class="label">And BYOK narrows it further</span>
+ <p>The brief in Part I says users won't pay a margin on inference they already buy. So the pricing surface shrinks to exactly one thing: <strong>the judgment layer, sold on top of a key the user brings or a model that runs locally.</strong> Two independent lines of evidence — a competitor's paywall placement and users' stated objection — landing on the same answer is about as much confirmation as this kind of decision ever gets.</p>
+ </div>
+
+ <h3>Mobile is the open flank</h3>
+ <p>Obsidian mobile is the desktop web codebase in a Capacitor WebView. The symptoms are 60s+ cold starts on large vaults, sync fragility against sandboxed iOS and Android filesystems and iCloud lazy-loading, and roughly 30% of plugins not working because they assume Node APIs or a desktop viewport.</p>
+ <p>This is architectural, not a backlog item — it follows from "files are the database" meeting a platform that won't hand you the filesystem. Fixing it would require a mobile-specific data layer, which forks their core premise.</p>
+
+ <div class="finding">
+ <span class="label">The trap to avoid</span>
+ <p>Wrapped-WebView on mobile is exactly how we would inherit their worst problem while claiming to beat it. Native — or at minimum a native data and index layer under a web UI — is the price of the positioning.</p>
+ </div>
+
+ <h3>What the surface owes the architecture</h3>
+ <p>Speed the user can feel is not only latency. Things 3 shows that a shallow opinionated hierarchy, natural-language dates, and soft buckets like "This Evening" all reduce the time between intent and a filed object — the same currency as a faster frame, spent on the decision instead of the render.</p>
+ <p>This also happens to protect rule 2. Atomic objects and a shallow hierarchy reinforce each other: if a capture is one small thing, there is nothing to nest, and the absence of nesting is what keeps invalidation trivial. The calm surface and the fast core are the same decision seen from two sides.</p>
+
+ <h3>The two risks, named</h3>
+ <div class="table-wrap">
+ <table>
+ <thead>
+ <tr><th>Risk</th><th>Why it bites</th><th>Mitigation</th></tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>Plugin ecosystem</td>
+ <td>Obsidian's moat is ~2,000 community plugins. We cannot match it, and parity is not a strategy.</td>
+ <td>Ship the top ten use cases natively; sandbox WASM plugins that talk to the core, never to the UI thread.</td>
+ </tr>
+ <tr>
+ <td>Text layout</td>
+ <td>Consistently underestimated. Bidi, ligatures, emoji, IME, soft-wrap with variable fonts.</td>
+ <td>Use an existing engine — cosmic-text, or GPUI's. Do not write our own.</td>
+ </tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3>The ledger</h3>
+ <div class="ledger">
+ <div class="ledger-col steal">
+ <h4>Steal</h4>
+ <ul>
+ <li><b>Parse once, reuse forever.</b> A bespoke persisted index for the capture-and-retrieval path — Obsidian and Sublime both landed here independently.</li>
+ <li><b>Open before you index.</b> Usable immediately; features light up as the index fills.</li>
+ <li><b>Local-first, background sync.</b> The network never sits between a tap and a result.</li>
+ <li><b>Atomic objects.</b> Edit unit equals embed unit equals invalidation unit.</li>
+ <li><b>Unfiled is valid.</b> Capture under five seconds means no destination is ever required.</li>
+ <li><b>One object, two facets.</b> Note becomes task by gaining a field, not by being copied.</li>
+ <li><b>Calm by subtraction.</b> Shallow hierarchy, NL dates, soft buckets, guilt-free deferral.</li>
+ <li><b>Flat local embeddings.</b> Brute-force cosine at vault scale; no vector database.</li>
+ </ul>
+ </div>
+ <div class="ledger-col avoid">
+ <h4>Avoid</h4>
+ <ul>
+ <li><b>Wrapped WebView on mobile.</b> Inherits Obsidian's worst problem while claiming to beat it.</li>
+ <li><b>Custom toolkits early.</b> Sublime bought those years with patient profitability we don't have.</li>
+ <li><b>Platform lock-in.</b> Things 3's Apple-only bet is closed to us by the cross-platform premise.</li>
+ <li><b>Opaque sync.</b> Unfixable from the outside when it goes wrong; users blame the app, correctly.</li>
+ <li><b>Blocking the UI on a full index.</b> A choice, not a requirement.</li>
+ <li><b>Gating search behind the paywall.</b> The market prices access at zero and judgment at $60/yr.</li>
+ <li><b>A margin on inference users already buy.</b> BYOK is expected now, not a concession.</li>
+ <li><b>Knobs as an answer.</b> For the ADHD audience, configurability is the problem wearing a helpful face.</li>
+ </ul>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <p class="closing">The brief and the machinery agree, which is the useful finding here. <strong>Speed is a modelling decision, not an optimisation achievement.</strong> Obsidian picked the unit that keeps invalidation small. Sublime deleted every generic layer from the critical path. Things 3 took the network out of the loop entirely and then removed the choices that remained. None of it is a rendering trick — it is three different answers to the same audit of what sits between a user's action and the result. We win by running that audit one level finer (atomic objects), skipping infrastructure that doesn't pay for itself at our scale (vector databases), charging for the layer users actually value (judgment, not access), and refusing the shortcuts that would undo the whole premise (WebView on mobile, opaque sync, custom toolkits we can't afford).</p>
+
+</div>
+
+</body></html>
